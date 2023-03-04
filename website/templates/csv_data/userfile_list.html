@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+
+{% block title %}CSV data{% endblock %}
+
+{% block content %}
+
+<h2>Choose columns for your data schema:</h2>
+
+<p>Choose which columns to include in the schema. You can change the order of the columns later.</p>
+
+<ul class="dataTypesList">
+<li>
+    <span id="fullNameLabel" style="opacity:0.25">Full name: </span>
+    <input type="checkbox" id="fullNameCheck" onclick="fullNameClick()"></li>
+
+<li>
+    <span id="jobLabel" style="opacity:0.25">Job: </span>
+    <input type="checkbox" id="jobCheck" onclick="jobClick()"></li>
+
+<li>
+    <span id="emailLabel" style="opacity:0.25">Email: </span>
+    <input type="checkbox" id="emailCheck" onclick="emailClick()"></li>
+
+<li>
+    <span id="domainLabel" style="opacity:0.25">Domain name: </span>
+    <input type="checkbox" id="domainCheck" onclick="domainClick()"></li>
+
+<li>
+    <span id="phoneLabel" style="opacity:0.25">Phone number: </span>
+    <input type="checkbox" id="phoneCheck" onclick="phoneClick()"></li>
+
+<li>
+    <span id="companyLabel" style="opacity:0.25">Company name: </span>
+    <input type="checkbox" id="companyCheck" onclick="companyClick()"></li>
+
+<li>
+    <span id="textLabel" style="opacity:0.25">Text: </span>
+    <input type="checkbox" id="textCheck" onclick="textClick()">
+    <span id="textRangeForm" style="display:none"> Text form here</span></li>
+
+<li>
+    <span id="integerLabel" style="opacity:0.25">Integer: </span>
+    <input type="checkbox" id="integerCheck" onclick="integerClick()">
+    <span id="integerRangeForm" style="display:none"> Integer form here</span></li>
+
+<li>
+    <span id="addressLabel" style="opacity:0.25">Address: </span>
+    <input type="checkbox" id="addressCheck" onclick="addressClick()"></li>
+
+<li>
+    <span id="dateLabel" style="opacity:0.25">Date: </span>
+    <input type="checkbox" id="dateCheck" onclick="dateClick()"></li>
+
+
+</ul>
+
+<ul id="sortableList" class="sortable">
+
+</ul>
+
+
+
+<script>
+
+    function dataTypeClick(checkId, labelId, itemNum, text) {
+        const checkBox = document.getElementById(checkId);
+        const label = document.getElementById(labelId);
+        if (checkBox.checked === true){
+            label.style.opacity = "1";
+            const li = document.createElement("li");
+            li.setAttribute("class", itemNum);
+            li.innerHTML = text;
+            document.getElementById("sortableList").appendChild(li);
+        } else {
+            label.style.opacity = "0.25";
+            document.getElementsByClassName(itemNum)[0].remove();
+        }
+    }
+
+    function textOrIntegerClick(checkId, formId, labelId, itemNum, text) {
+        const checkBox = document.getElementById(checkId);
+        const form = document.getElementById(formId);
+        const label = document.getElementById(labelId);
+        if (checkBox.checked === true){
+            form.style.display = "inline";
+            label.style.opacity = "1";
+            const li = document.createElement("li");
+            li.setAttribute("class",itemNum);
+            li.innerHTML = text;
+            document.getElementById("sortableList").appendChild(li);
+        } else {
+            form.style.display = "none";
+            label.style.opacity = "0.25";
+            document.getElementsByClassName(itemNum)[0].remove();
+        }
+    }
+
+    function fullNameClick() {
+        dataTypeClick("fullNameCheck", "fullNameLabel", "item-1", "Full name")
+    }
+
+    function jobClick() {
+        dataTypeClick("jobCheck", "jobLabel", "item-2", "Job")
+    }
+
+    function emailClick() {
+        dataTypeClick("emailCheck", "emailLabel", "item-3", "Email")
+    }
+
+    function domainClick() {
+        dataTypeClick("domainCheck", "domainLabel", "item-4", "Domain name")
+    }
+
+    function phoneClick() {
+        dataTypeClick("phoneCheck", "phoneLabel", "item-5", "Phone")
+    }
+
+    function companyClick() {
+        dataTypeClick("companyCheck", "companyLabel", "item-6", "Company name")
+    }
+
+    function textClick() {
+        textOrIntegerClick("textCheck", "textRangeForm", "textLabel", "item-7",
+         "Text")
+    }
+
+    function integerClick() {
+        textOrIntegerClick("integerCheck", "integerRangeForm", "integerLabel",
+        "item-8", "Integer")
+    }
+
+    function addressClick() {
+        dataTypeClick("addressCheck", "addressLabel", "item-9", "Address")
+    }
+
+    function dateClick() {
+        dataTypeClick("dateCheck", "dateLabel", "item-10", "Date")
+    }
+
+</script>
+
+{% endblock %}
