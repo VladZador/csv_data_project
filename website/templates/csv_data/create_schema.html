@@ -337,8 +337,8 @@ function createSchema() {
             numberedList.push(i + ". " + x)
             i++
         }
-
-        dataSchema.numberedList = numberedList
+        
+        const schema = {numberedList: numberedList}
 
         const textElmnt = document.getElementById("text");
         const integerElmnt = document.getElementById("integer");
@@ -346,23 +346,25 @@ function createSchema() {
         if (!(textElmnt == null)) {
             if (textElmnt.hasAttribute("data-text-min")) {
                 textMin = textElmnt.dataset.textMin
-                dataSchema.textMin = textMin
+                schema.textMin = textMin
             }
             if (textElmnt.hasAttribute("data-text-max")) {
                 textMax = textElmnt.dataset.textMax
-                dataSchema.textMax = textMax
+                schema.textMax = textMax
             }
         }
         if (!(integerElmnt == null)) {
             if (integerElmnt.hasAttribute("data-integer-min")) {
                 integerMin = integerElmnt.dataset.integerMin
-                dataSchema.integerMin = integerMin
+                schema.integerMin = integerMin
             }
             if (integerElmnt.hasAttribute("data-integer-max")) {
                 integerMax = integerElmnt.dataset.integerMax
-                dataSchema.integerMax = integerMax
+                schema.integerMax = integerMax
             }
         }
+
+        dataSchema.schema = schema
         
         url = document.getElementById("confrmBtn").dataset.url
 

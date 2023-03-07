@@ -9,4 +9,5 @@ class UserFile(models.Model):
 
 class DataSchema(models.Model):
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    name = models.CharField(max_length=255)
     schema = models.JSONField()
