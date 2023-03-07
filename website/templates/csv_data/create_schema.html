@@ -1,0 +1,389 @@
+{% extends 'base.html' %}
+
+{% block title %}CSV data{% endblock %}
+
+{% block external %}
+<style>
+    input.invalid {
+        background-color: #ffdddd;
+    }
+</style>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
+<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
+<script>
+$(function() {
+    $("#sortableList").sortable()
+});
+</script>
+{% endblock %}
+
+{% block content %}
+
+<div id="chooseColumns" class="tab">
+<h2>Choose columns for your data schema:</h2>
+
+<p>Choose which columns to include in the schema. You can change the order of the columns later.</p>
+
+<ul class="dataTypesList">
+<li>
+    <span id="fullNameLabel" style="opacity:0.25">Full name: </span>
+    <input type="checkbox" id="fullNameCheck" onclick="fullNameClick()"></li>
+
+<li>
+    <span id="jobLabel" style="opacity:0.25">Job: </span>
+    <input type="checkbox" id="jobCheck" onclick="jobClick()"></li>
+
+<li>
+    <span id="emailLabel" style="opacity:0.25">Email: </span>
+    <input type="checkbox" id="emailCheck" onclick="emailClick()"></li>
+
+<li>
+    <span id="domainLabel" style="opacity:0.25">Domain name: </span>
+    <input type="checkbox" id="domainCheck" onclick="domainClick()"></li>
+
+<li>
+    <span id="phoneLabel" style="opacity:0.25">Phone number: </span>
+    <input type="checkbox" id="phoneCheck" onclick="phoneClick()"></li>
+
+<li>
+    <span id="companyLabel" style="opacity:0.25">Company name: </span>
+    <input type="checkbox" id="companyCheck" onclick="companyClick()"></li>
+
+<li>
+    <span id="textLabel" style="opacity:0.25">Text: </span>
+    <input type="checkbox" id="textCheck" onclick="textClick()">
+    <div id="textRangeForm" class="input-group" style="display:none">
+        <p>Enter a range for a number of sentences in the text.</p>
+        <p>Enter one or both range limits in the fields. If you leave any field blank, a random number will be used for it.</p>
+        <p>
+            <input type="number" id="textMin" name="textRangeMin"
+            class="form-control" placeholder="Minimum number of sentences in a text"
+            oninput="this.className = 'form-control'" min="0">
+            <input type="number" id="textMax" name="textRangeMax"
+            class="form-control" placeholder="Maximum number of sentences in a text"
+            oninput="this.className = 'form-control'" min="0">
+            <button onclick="validateTextOrIntForm('text')">Select this range</button>
+        </p>
+    </div></li>
+
+<li>
+    <span id="integerLabel" style="opacity:0.25">Integer: </span>
+    <input type="checkbox" id="integerCheck" onclick="integerClick()">
+    <div id="integerRangeForm" class="input-group" style="display:none">
+        <p>Enter a range for the number to be generated.</p>
+        <p>Enter one or both range limits in the fields. If you leave any field blank, a random number will be used for it.</p>
+        <p>
+            <input type="number" id="integerMin" name="integerRangeMin"
+            class="form-control" placeholder="Minimum range limit"
+            oninput="this.className = 'form-control'" min="0">
+            <input type="number" id="integerMax" name="integerRangeMax"
+            class="form-control" placeholder="Maximum range limit"
+            oninput="this.className = 'form-control'" min="0">
+            <button onclick="validateTextOrIntForm('integer')">Select this range</button>
+        </p>
+    </div></li>
+
+<li>
+    <span id="addressLabel" style="opacity:0.25">Address: </span>
+    <input type="checkbox" id="addressCheck" onclick="addressClick()"></li>
+
+<li>
+    <span id="dateLabel" style="opacity:0.25">Date: </span>
+    <input type="checkbox" id="dateCheck" onclick="dateClick()"></li>
+
+</ul>
+</div>
+
+
+<div id="orderColumns" class="tab" style="display: none">
+<h2>Order columns by dragging them:</h2>
+<ul id="sortableList" class="sortable">
+
+</ul>
+<p>And choose the name for your data schema:</p>
+<input type="text" id="schemaName" name="schemaName" class="form-control" 
+oninput="this.className = 'form-control'">
+</div>
+
+
+<div class="buttons">
+    <button type="button" id="prevBtn" onclick="goBack()" style="display: none">Back</button>
+    <button type="button" id="nextBtn" onclick="goNext()">Next</button>
+    <button type="button" id="confrmBtn" 
+    data-url="{% url 'confirm_schema_creation' %}"
+    onclick="createSchema()" style="display: none">Create</button>
+</div>
+
+
+
+<script>
+
+function dataTypeClick(checkId, labelId, itemId, text) {
+    const checkBox = document.getElementById(checkId);
+    const label = document.getElementById(labelId);
+    if (checkBox.checked === true){
+        label.style.opacity = "1";
+        const li = document.createElement("li");
+        li.setAttribute("id", itemId);
+        li.innerHTML = text;
+        document.getElementById("sortableList").appendChild(li);
+    } else {
+        label.style.opacity = "0.25";
+        document.getElementById(itemId).remove();
+    }
+}
+
+function textOrIntegerClick(checkId, formId, labelId, itemId, text) {
+
+    const checkBox = document.getElementById(checkId);
+    const form = document.getElementById(formId);
+    const label = document.getElementById(labelId);
+    if (checkBox.checked === true){
+        form.style.display = "inline";
+        label.style.opacity = "1";
+        const li = document.createElement("li");
+        li.setAttribute("id", itemId);
+        li.innerHTML = text;
+        document.getElementById("sortableList").appendChild(li);
+    } else {
+        form.style.display = "none";
+        label.style.opacity = "0.25";
+        document.getElementById(itemId).remove();
+        forms = document.getElementById(formId).getElementsByClassName("form-control");
+        for (let form of forms) {
+            form.value = "";
+        }
+    }
+}
+
+function fullNameClick() {
+    dataTypeClick("fullNameCheck", "fullNameLabel", "fullName", "Full name")
+}
+
+function jobClick() {
+    dataTypeClick("jobCheck", "jobLabel", "job", "Job")
+}
+
+function emailClick() {
+    dataTypeClick("emailCheck", "emailLabel", "email", "Email")
+}
+
+function domainClick() {
+    dataTypeClick("domainCheck", "domainLabel", "domain", "Domain name")
+}
+
+function phoneClick() {
+    dataTypeClick("phoneCheck", "phoneLabel", "phone", "Phone")
+}
+
+function companyClick() {
+    dataTypeClick("companyCheck", "companyLabel", "company", "Company name")
+}
+
+function textClick() {
+    textOrIntegerClick("textCheck", "textRangeForm", "textLabel", "text",
+        "Text")
+}
+
+function integerClick() {
+    textOrIntegerClick("integerCheck", "integerRangeForm", "integerLabel",
+    "integer", "Integer")
+}
+
+function addressClick() {
+    dataTypeClick("addressCheck", "addressLabel", "address", "Address")
+}
+
+function dateClick() {
+    dataTypeClick("dateCheck", "dateLabel", "date", "Date")
+}
+
+function invalidTypeReceived(form) {
+    form.className += " invalid";
+    form.value = "";
+    form.placeholder = "Input must be an integer";
+}
+
+function negativeReceived(form) {
+    form.className += " invalid";
+    form.value = "";
+    form.placeholder = "Input must be a positive integer";
+}
+
+function validateTextOrIntForm (textOrInt) {
+    const minForm = document.getElementById(textOrInt + "Min");
+    const maxForm = document.getElementById(textOrInt + "Max");
+
+    let minValue = minForm.value;
+    let maxValue = maxForm.value;
+
+    if (minValue == "" && maxValue == "") {
+        return;
+    } else if (minValue == "") {
+        const max = parseFloat(maxValue);
+        if (!(Number.isInteger(max))) {
+            invalidTypeReceived(maxForm);
+        } else if (parseFloat(max) < 0) {
+            negativeReceived(maxForm);
+        } else {
+            document.getElementById(textOrInt).setAttribute("data-" + textOrInt + "-max", max);
+        }
+    } else if (maxValue == "") {
+        const min = parseFloat(minValue);
+        if (!(Number.isInteger(min))) {
+            invalidTypeReceived(minForm);
+        } else if (parseFloat(min) < 0) {
+            negativeReceived(minForm);
+        } else {
+            document.getElementById(textOrInt).setAttribute("data-" + textOrInt + "-min", min);
+        }
+    } else {
+        const min = parseFloat(minValue);
+        const max = parseFloat(maxValue);
+
+        if (!(Number.isInteger(min)) || !(Number.isInteger(max))) {
+            if (!(Number.isInteger(min))) {
+                invalidTypeReceived(minForm);
+            }
+            if (!(Number.isInteger(max))) {
+                invalidTypeReceived(maxForm);
+            }
+        } else if (min < 0 || max < 0) {
+            if (min < 0) {
+                negativeReceived(minForm);
+            }
+            if (max < 0) {
+                negativeReceived(maxForm);
+            }
+        } else if (max < min) {
+            maxForm.className += " invalid";
+            maxForm.value = "";
+            maxForm.placeholder = "The upper limit must be greater than the lower";
+        } else {
+            document.getElementById(textOrInt).setAttribute("data-" + textOrInt + "-min", min);
+            document.getElementById(textOrInt).setAttribute("data-" + textOrInt + "-max", max);
+        }
+    }
+}
+
+
+function goBack() {
+    document.getElementById("chooseColumns").style.display = "block";
+    document.getElementById("orderColumns").style.display = "none";
+    document.getElementById("prevBtn").style.display = "none";
+    document.getElementById("nextBtn").style.display = "inline";
+    document.getElementById("confrmBtn").style.display = "none";
+}
+
+function goNext() {
+
+    let checkboxes = document.querySelectorAll('input[type="checkbox"]');
+    let checkedOne = Array.prototype.slice.call(checkboxes).some(x => x.checked);
+
+    if (checkedOne) {
+        document.getElementById("chooseColumns").style.display = "none";
+        document.getElementById("orderColumns").style.display = "block";
+        document.getElementById("prevBtn").style.display = "inline";
+        document.getElementById("nextBtn").style.display = "none";
+        document.getElementById("confrmBtn").style.display = "inline";
+    } else {
+        alert("Choose at least one column");
+    }
+}
+
+function validateSchemaName() {
+    let form = document.getElementById("schemaName")
+    let schemaName = form.value;
+
+    if (!(schemaName.match(/^[\w\s\-%.,]+$/))) {
+        form.className += " invalid";
+        form.value = "";
+        form.placeholder = "Input must be alphanumeric";
+        return false
+    } else {
+        return schemaName
+    }
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+const csrftoken = getCookie('csrftoken');
+
+function createSchema() {
+
+    const schemaName = validateSchemaName()
+    if (!schemaName === false) {
+
+        const dataSchema = {name: schemaName}
+
+        const orderedList = $("#sortableList").sortable("toArray");
+        const numberedList = []
+        let i = 1
+        for (let x of orderedList) {
+            numberedList.push(i + ". " + x)
+            i++
+        }
+
+        dataSchema.numberedList = numberedList
+
+        const textElmnt = document.getElementById("text");
+        const integerElmnt = document.getElementById("integer");
+
+        if (!(textElmnt == null)) {
+            if (textElmnt.hasAttribute("data-text-min")) {
+                textMin = textElmnt.dataset.textMin
+                dataSchema.textMin = textMin
+            }
+            if (textElmnt.hasAttribute("data-text-max")) {
+                textMax = textElmnt.dataset.textMax
+                dataSchema.textMax = textMax
+            }
+        }
+        if (!(integerElmnt == null)) {
+            if (integerElmnt.hasAttribute("data-integer-min")) {
+                integerMin = integerElmnt.dataset.integerMin
+                dataSchema.integerMin = integerMin
+            }
+            if (integerElmnt.hasAttribute("data-integer-max")) {
+                integerMax = integerElmnt.dataset.integerMax
+                dataSchema.integerMax = integerMax
+            }
+        }
+        
+        url = document.getElementById("confrmBtn").dataset.url
+
+        fetch(url, {
+            method: "POST",
+            credentials: "same-origin",
+            headers: {
+                "Accept": "application/json",
+                "X-Requested-With": "XMLHttpRequest",
+                "X-CSRFToken": csrftoken,
+            },
+            body: JSON.stringify({"post_data":dataSchema}),
+            redirect: "follow"
+        })
+            .then(response => response.json())
+            .then(result => {
+                location.assign(result.redirectUrl);
+            })
+    }
+}
+
+</script>
+
+{% endblock %}
