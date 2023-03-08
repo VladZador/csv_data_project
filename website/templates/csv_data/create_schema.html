@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}CSV data{% endblock %}
+{% block title %}Create data schema{% endblock %}
 
 {% block external %}
 <style>
@@ -56,12 +56,12 @@ $(function() {
         <p>Enter a range for a number of sentences in the text.</p>
         <p>Enter one or both range limits in the fields. If you leave any field blank, a random number will be used for it.</p>
         <p>
-            <input type="number" id="textMin" name="textRangeMin"
-            class="form-control" placeholder="Minimum number of sentences in a text"
-            oninput="this.className = 'form-control'" min="0">
-            <input type="number" id="textMax" name="textRangeMax"
-            class="form-control" placeholder="Maximum number of sentences in a text"
-            oninput="this.className = 'form-control'" min="0">
+            <input type="text" id="textMin" name="range"
+            placeholder="Minimum number of sentences in a text"
+            oninput="this.className = ''">
+            <input type="text" id="textMax" name="range"
+            placeholder="Maximum number of sentences in a text"
+            oninput="this.className = ''">
             <button onclick="validateTextOrIntForm('text')">Select this range</button>
         </p>
     </div></li>
@@ -73,12 +73,12 @@ $(function() {
         <p>Enter a range for the number to be generated.</p>
         <p>Enter one or both range limits in the fields. If you leave any field blank, a random number will be used for it.</p>
         <p>
-            <input type="number" id="integerMin" name="integerRangeMin"
-            class="form-control" placeholder="Minimum range limit"
-            oninput="this.className = 'form-control'" min="0">
-            <input type="number" id="integerMax" name="integerRangeMax"
-            class="form-control" placeholder="Maximum range limit"
-            oninput="this.className = 'form-control'" min="0">
+            <input type="text" id="integerMin" name="range"
+            placeholder="Minimum range limit"
+            oninput="this.className = ''">
+            <input type="text" id="integerMax" name="range"
+            placeholder="Maximum range limit"
+            oninput="this.className = ''">
             <button onclick="validateTextOrIntForm('integer')">Select this range</button>
         </p>
     </div></li>
@@ -101,8 +101,8 @@ $(function() {
 
 </ul>
 <p>And choose the name for your data schema:</p>
-<input type="text" id="schemaName" name="schemaName" class="form-control" 
-oninput="this.className = 'form-control'">
+<input type="text" id="schemaName" name="schemaName"
+oninput="this.className = ''">
 </div>
 
 
@@ -111,7 +111,7 @@ oninput="this.className = 'form-control'">
     <button type="button" id="nextBtn" onclick="goNext()">Next</button>
     <button type="button" id="confrmBtn" 
     data-url="{% url 'confirm_schema_creation' %}"
-    onclick="createSchema()" style="display: none">Create</button>
+    onclick="sendRequest()" style="display: none">Create</button>
 </div>
 
 
@@ -149,7 +149,7 @@ function textOrIntegerClick(checkId, formId, labelId, itemId, text) {
         form.style.display = "none";
         label.style.opacity = "0.25";
         document.getElementById(itemId).remove();
-        forms = document.getElementById(formId).getElementsByClassName("form-control");
+        forms = document.getElementById(formId).getElementsByTagName("input");
         for (let form of forms) {
             form.value = "";
         }
@@ -198,14 +198,8 @@ function dateClick() {
     dataTypeClick("dateCheck", "dateLabel", "date", "Date")
 }
 
-function invalidTypeReceived(form) {
-    form.className += " invalid";
-    form.value = "";
-    form.placeholder = "Input must be an integer";
-}
-
-function negativeReceived(form) {
-    form.className += " invalid";
+function invalidInputReceived(form) {
+    form.className = "invalid";
     form.value = "";
     form.placeholder = "Input must be a positive integer";
 }
@@ -218,45 +212,53 @@ function validateTextOrIntForm (textOrInt) {
     let maxValue = maxForm.value;
 
     if (minValue == "" && maxValue == "") {
-        return;
+        return true;
     } else if (minValue == "") {
+        if (isNaN(maxValue)){
+            invalidInputReceived(maxForm);
+            return false;
+        }
         const max = parseFloat(maxValue);
-        if (!(Number.isInteger(max))) {
-            invalidTypeReceived(maxForm);
-        } else if (parseFloat(max) < 0) {
-            negativeReceived(maxForm);
+        if (!(Number.isInteger(max)) || max <= 0) {
+            invalidInputReceived(maxForm);
         } else {
             document.getElementById(textOrInt).setAttribute("data-" + textOrInt + "-max", max);
         }
     } else if (maxValue == "") {
+        if (isNaN(minValue)){
+            invalidInputReceived(minForm);
+            return false;
+        }
         const min = parseFloat(minValue);
-        if (!(Number.isInteger(min))) {
-            invalidTypeReceived(minForm);
-        } else if (parseFloat(min) < 0) {
-            negativeReceived(minForm);
+        if (!(Number.isInteger(min)) || min < 0) {
+            invalidInputReceived(minForm);
         } else {
             document.getElementById(textOrInt).setAttribute("data-" + textOrInt + "-min", min);
         }
     } else {
+
+        if (isNaN(minValue) || isNaN(maxValue)){
+            if (isNaN(minValue)){
+                invalidInputReceived(minForm);
+            }
+            if (isNaN(maxValue)){
+                invalidInputReceived(maxForm);
+            }
+            return false;
+        }
+
         const min = parseFloat(minValue);
         const max = parseFloat(maxValue);
 
-        if (!(Number.isInteger(min)) || !(Number.isInteger(max))) {
-            if (!(Number.isInteger(min))) {
-                invalidTypeReceived(minForm);
+        if (!(Number.isInteger(min)) || !(Number.isInteger(max)) || min < 0 || max <= 0) {
+            if (!(Number.isInteger(min)) || min < 0) {
+                invalidInputReceived(minForm);
             }
-            if (!(Number.isInteger(max))) {
-                invalidTypeReceived(maxForm);
-            }
-        } else if (min < 0 || max < 0) {
-            if (min < 0) {
-                negativeReceived(minForm);
-            }
-            if (max < 0) {
-                negativeReceived(maxForm);
+            if (!(Number.isInteger(max)) || max <= 0) {
+                invalidInputReceived(maxForm);
             }
         } else if (max < min) {
-            maxForm.className += " invalid";
+            maxForm.className = "invalid";
             maxForm.value = "";
             maxForm.placeholder = "The upper limit must be greater than the lower";
         } else {
@@ -264,8 +266,8 @@ function validateTextOrIntForm (textOrInt) {
             document.getElementById(textOrInt).setAttribute("data-" + textOrInt + "-max", max);
         }
     }
+    return true;
 }
-
 
 function goBack() {
     document.getElementById("chooseColumns").style.display = "block";
@@ -277,8 +279,8 @@ function goBack() {
 
 function goNext() {
 
-    let checkboxes = document.querySelectorAll('input[type="checkbox"]');
-    let checkedOne = Array.prototype.slice.call(checkboxes).some(x => x.checked);
+    const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+    const checkedOne = Array.prototype.slice.call(checkboxes).some(x => x.checked);
 
     if (checkedOne) {
         document.getElementById("chooseColumns").style.display = "none";
@@ -292,11 +294,11 @@ function goNext() {
 }
 
 function validateSchemaName() {
-    let form = document.getElementById("schemaName")
+    let form = document.getElementById("schemaName");
     let schemaName = form.value;
 
-    if (!(schemaName.match(/^[\w\s\-%.,]+$/))) {
-        form.className += " invalid";
+    if (!(schemaName.match(/^[\w\s]+$/))) {
+        form.className = "invalid";
         form.value = "";
         form.placeholder = "Input must be alphanumeric";
         return false
@@ -323,50 +325,50 @@ function getCookie(name) {
 
 const csrftoken = getCookie('csrftoken');
 
-function createSchema() {
+function createSchema(name) {
 
-    const schemaName = validateSchemaName()
+    const dataSchema = {name: name};
+
+    const orderedList = $("#sortableList").sortable("toArray");
+    const schema = {orderedList: orderedList};
+
+    const textElmnt = document.getElementById("text");
+    const integerElmnt = document.getElementById("integer");
+
+    if (!(textElmnt == null)) {
+        if (textElmnt.hasAttribute("data-text-min")) {
+            textMin = textElmnt.dataset.textMin;
+            schema.textMin = textMin;
+        }
+        if (textElmnt.hasAttribute("data-text-max")) {
+            textMax = textElmnt.dataset.textMax;
+            schema.textMax = textMax;
+        }
+    }
+    if (!(integerElmnt == null)) {
+        if (integerElmnt.hasAttribute("data-integer-min")) {
+            integerMin = integerElmnt.dataset.integerMin;
+            schema.integerMin = integerMin;
+        }
+        if (integerElmnt.hasAttribute("data-integer-max")) {
+            integerMax = integerElmnt.dataset.integerMax;
+            schema.integerMax = integerMax;
+        }
+    }
+
+    dataSchema.schema = schema;
+    return dataSchema
+}
+
+function sendRequest() {
+
+    const schemaName = validateSchemaName();
+
     if (!schemaName === false) {
 
-        const dataSchema = {name: schemaName}
-
-        const orderedList = $("#sortableList").sortable("toArray");
-        const numberedList = []
-        let i = 1
-        for (let x of orderedList) {
-            numberedList.push(i + ". " + x)
-            i++
-        }
+        const dataSchema = createSchema(schemaName);
         
-        const schema = {numberedList: numberedList}
-
-        const textElmnt = document.getElementById("text");
-        const integerElmnt = document.getElementById("integer");
-
-        if (!(textElmnt == null)) {
-            if (textElmnt.hasAttribute("data-text-min")) {
-                textMin = textElmnt.dataset.textMin
-                schema.textMin = textMin
-            }
-            if (textElmnt.hasAttribute("data-text-max")) {
-                textMax = textElmnt.dataset.textMax
-                schema.textMax = textMax
-            }
-        }
-        if (!(integerElmnt == null)) {
-            if (integerElmnt.hasAttribute("data-integer-min")) {
-                integerMin = integerElmnt.dataset.integerMin
-                schema.integerMin = integerMin
-            }
-            if (integerElmnt.hasAttribute("data-integer-max")) {
-                integerMax = integerElmnt.dataset.integerMax
-                schema.integerMax = integerMax
-            }
-        }
-
-        dataSchema.schema = schema
-        
-        url = document.getElementById("confrmBtn").dataset.url
+        const url = document.getElementById("confrmBtn").dataset.url;
 
         fetch(url, {
             method: "POST",

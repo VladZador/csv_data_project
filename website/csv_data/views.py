@@ -4,7 +4,7 @@ from django.http import JsonResponse
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
 from django.views import View
-from django.views.generic import ListView, TemplateView
+from django.views.generic import ListView, TemplateView, DetailView
 from django.contrib import messages
 
 from .models import UserFile, DataSchema
@@ -13,6 +13,12 @@ from website.decorators import ajax_required
 
 class UserFileView(LoginRequiredMixin, ListView):
     model = UserFile
+
+    def get_context_data(self, *args, object_list=None, **kwargs):
+        context = super().get_context_data(object_list=None, **kwargs)
+        schemas = DataSchema.objects.filter(user=self.request.user)
+        context.update({"schemas": schemas})
+        return context
 
 
 class DataSchemaCreateView(LoginRequiredMixin, TemplateView):
@@ -28,10 +34,7 @@ class DataSchemaRedirectView(LoginRequiredMixin, View):
         :param request: json.load(request)["post_data"] = {
             "name": "SchemaName",
             "schema": {
-                "numberedList": [
-                    "1. fullName",
-                    "2. job"
-                ],
+                "orderedList": ["fullName", "job"],
                 "textMin": 2,
                 "textMax": 5
             }
@@ -44,12 +47,10 @@ class DataSchemaRedirectView(LoginRequiredMixin, View):
         schema, created = DataSchema.objects.get_or_create(
             user=request.user,
             schema=data_schema["schema"],
-            defaults={"name": data_schema["name"]}
+            name=data_schema["name"]
         )
         if not created:
-            messages.success(request,
-                             "You already have this schema, its name is " +
-                             data_schema["name"])
+            messages.success(request, "You already have this schema")
         return JsonResponse(
             data={"redirectUrl": reverse_lazy("user_files")}
         )

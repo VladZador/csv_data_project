@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block title %}CSV data{% endblock %}
+
+{% block external %}
+<style>
+    input.invalid {
+        background-color: #ffdddd;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<h3>Choose data schema</h3>
+{% if schemas %}
+{% for schema in schemas.iterator %}
+
+    <p><input type="radio" id="{{ schema.name }}"name="schema" value="{{ schema.name }}">
+    <label for="{{ schema.name }}">{{ schema.name }}</label></p>
+
+{% endfor %}
+<h3>Enter the number of records to generate</h3>
+<input type="text" id="recordsNumber" name="recordsNumber"
+oninput="this.className = ''">
+
+<button type="button" onclick="generateData()">Generate data</button>
+</form>
+{% else %}
+<p> There's nothing in here </p>
+{% endif %}
+
+<script>
+
+function validateRadio() {
+    const radios = document.querySelectorAll('input[type="radio"]');
+    const checkedOne = Array.prototype.slice.call(radios).some(x => x.checked);
+    return checkedOne;
+}
+
+function invalidInputReceived(input) {
+    input.className = "invalid";
+    input.value = "";
+    input.placeholder = "Input must be a positive integer";
+}
+
+function validateNumber() {
+    const input = document.getElementById("recordsNumber");
+    if (isNaN(input.value)){
+        invalidInputReceived(input);
+        return false;
+    }
+
+    const recordsNumber = parseFloat(input.value);
+    if (!(Number.isInteger(recordsNumber)) || recordsNumber <= 0) {
+        invalidInputReceived(input);
+        return false;
+    }
+    return recordsNumber
+}
+
+function generateData() {
+    if (!validateRadio()) {
+        alert("Choose data schema");
+        return false;
+    }
+    const recordsNumber = validateNumber();
+    if (!recordsNumber) {
+        return false;
+    }
+
+    const chosenSchemaName = document.querySelector('input[name="schema"]:checked').value;
+    
+    console.log(chosenSchemaName, recordsNumber);
+    // fetch
+    return chosenSchemaName
+}
+    
+</script>
+
+{% endblock %}
