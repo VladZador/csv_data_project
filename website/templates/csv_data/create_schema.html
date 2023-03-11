@@ -382,9 +382,12 @@ function sendRequest() {
             redirect: "follow"
         })
             .then(response => response.json())
-            .then(result => {
-                location.assign(result.redirectUrl);
+            .then(data => {
+                location.assign(data.redirectUrl);
             })
+            .catch(function(error) {
+                console.log(error)
+            });
     }
 }
 

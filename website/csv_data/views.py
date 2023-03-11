@@ -1,4 +1,6 @@
 import json
+import time
+
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import JsonResponse
 from django.urls import reverse_lazy
@@ -21,12 +23,30 @@ class UserFileView(LoginRequiredMixin, ListView):
         return context
 
 
-class DataSchemaCreateView(LoginRequiredMixin, TemplateView):
+@method_decorator(ajax_required, name="dispatch")
+class GenerateDataView(LoginRequiredMixin, View):
+
+    def post(self, request, *args, **kwargs):
+        data = json.load(request)["post_data"]
+        try:
+            schema = DataSchema.objects.get(name=data["name"])
+            response_data = self._create_csv_file(schema, data["number"])
+            return JsonResponse(data={"data": response_data})
+        except DataSchema.DoesNotExist:
+            # todo: think about proper response
+            return False
+
+    def _create_csv_file(self, schema, number):
+        time.sleep(5)
+        return "ok"
+
+
+class DataSchemaView(LoginRequiredMixin, TemplateView):
     template_name = "csv_data/create_schema.html"
 
 
 @method_decorator(ajax_required, name="dispatch")
-class DataSchemaRedirectView(LoginRequiredMixin, View):
+class DataSchemaCreateView(LoginRequiredMixin, View):
 
     @staticmethod
     def post(request, *args, **kwargs):
