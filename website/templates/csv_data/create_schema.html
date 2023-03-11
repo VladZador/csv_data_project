@@ -98,7 +98,7 @@ $(function() {
 <div id="orderColumns" class="tab" style="display: none">
 <h2>Order columns by dragging them:</h2>
 <ul id="sortableList" class="sortable">
-
+    <!-- Columns chosen by a user will appear here -->
 </ul>
 <p>And choose the name for your data schema:</p>
 <input type="text" id="schemaName" name="schemaName"
@@ -157,51 +157,57 @@ function textOrIntegerClick(checkId, formId, labelId, itemId, text) {
 }
 
 function fullNameClick() {
-    dataTypeClick("fullNameCheck", "fullNameLabel", "fullName", "Full name")
+    dataTypeClick("fullNameCheck", "fullNameLabel", "Full-name", "Full name")
 }
 
 function jobClick() {
-    dataTypeClick("jobCheck", "jobLabel", "job", "Job")
+    dataTypeClick("jobCheck", "jobLabel", "Job", "Job")
 }
 
 function emailClick() {
-    dataTypeClick("emailCheck", "emailLabel", "email", "Email")
+    dataTypeClick("emailCheck", "emailLabel", "Email", "Email")
 }
 
 function domainClick() {
-    dataTypeClick("domainCheck", "domainLabel", "domain", "Domain name")
+    dataTypeClick("domainCheck", "domainLabel", "Domain-name", "Domain name")
 }
 
 function phoneClick() {
-    dataTypeClick("phoneCheck", "phoneLabel", "phone", "Phone")
+    dataTypeClick("phoneCheck", "phoneLabel", "Phone-number", "Phone")
 }
 
 function companyClick() {
-    dataTypeClick("companyCheck", "companyLabel", "company", "Company name")
+    dataTypeClick("companyCheck", "companyLabel", "Company-name", "Company name")
 }
 
 function textClick() {
-    textOrIntegerClick("textCheck", "textRangeForm", "textLabel", "text",
+    textOrIntegerClick("textCheck", "textRangeForm", "textLabel", "Text",
         "Text")
 }
 
 function integerClick() {
     textOrIntegerClick("integerCheck", "integerRangeForm", "integerLabel",
-    "integer", "Integer")
+    "Integer", "Integer")
 }
 
 function addressClick() {
-    dataTypeClick("addressCheck", "addressLabel", "address", "Address")
+    dataTypeClick("addressCheck", "addressLabel", "Address", "Address")
 }
 
 function dateClick() {
-    dataTypeClick("dateCheck", "dateLabel", "date", "Date")
+    dataTypeClick("dateCheck", "dateLabel", "Date", "Date")
 }
 
 function invalidInputReceived(form) {
     form.className = "invalid";
     form.value = "";
     form.placeholder = "Input must be a positive integer";
+}
+
+function textExceedMaxReceived(form) {
+    form.className = "invalid";
+    form.value = "";
+    form.placeholder = "Text range should not exceed 100 sentences";
 }
 
 function validateTextOrIntForm (textOrInt) {
@@ -230,7 +236,7 @@ function validateTextOrIntForm (textOrInt) {
             return false;
         }
         const min = parseFloat(minValue);
-        if (!(Number.isInteger(min)) || min < 0) {
+        if (!(Number.isInteger(min)) || min <= 0) {
             invalidInputReceived(minForm);
         } else {
             document.getElementById(textOrInt).setAttribute("data-" + textOrInt + "-min", min);
@@ -250,12 +256,19 @@ function validateTextOrIntForm (textOrInt) {
         const min = parseFloat(minValue);
         const max = parseFloat(maxValue);
 
-        if (!(Number.isInteger(min)) || !(Number.isInteger(max)) || min < 0 || max <= 0) {
-            if (!(Number.isInteger(min)) || min < 0) {
+        if (!(Number.isInteger(min)) || !(Number.isInteger(max)) || min <= 0 || max <= 0) {
+            if (!(Number.isInteger(min)) || min <= 0) {
                 invalidInputReceived(minForm);
             }
             if (!(Number.isInteger(max)) || max <= 0) {
                 invalidInputReceived(maxForm);
+            }
+        } else if (textOrInt === "text" && (min > 100 || max > 100)) {
+            if (min > 100) {
+                textExceedMaxReceived(minForm);
+            }
+            if (max > 100) {
+                textExceedMaxReceived(maxForm);
             }
         } else if (max < min) {
             maxForm.className = "invalid";
@@ -337,22 +350,18 @@ function createSchema(name) {
 
     if (!(textElmnt == null)) {
         if (textElmnt.hasAttribute("data-text-min")) {
-            textMin = textElmnt.dataset.textMin;
-            schema.textMin = textMin;
+            schema.textMin = textElmnt.dataset.textMin;
         }
         if (textElmnt.hasAttribute("data-text-max")) {
-            textMax = textElmnt.dataset.textMax;
-            schema.textMax = textMax;
+            schema.textMax = textElmnt.dataset.textMax;
         }
     }
     if (!(integerElmnt == null)) {
         if (integerElmnt.hasAttribute("data-integer-min")) {
-            integerMin = integerElmnt.dataset.integerMin;
-            schema.integerMin = integerMin;
+            schema.integerMin = integerElmnt.dataset.integerMin;
         }
         if (integerElmnt.hasAttribute("data-integer-max")) {
-            integerMax = integerElmnt.dataset.integerMax;
-            schema.integerMax = integerMax;
+            schema.integerMax = integerElmnt.dataset.integerMax;
         }
     }
 

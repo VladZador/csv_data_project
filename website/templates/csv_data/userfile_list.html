@@ -13,6 +13,7 @@
 {% block content %}
 
 <h3>Choose data schema</h3>
+<!-- If there's no user schema , user should be able only to create one -->
 {% if schemas %}
 {% for schema in schemas.iterator %}
 
@@ -29,6 +30,11 @@ oninput="this.className = ''">
 {% else %}
 <p> There's nothing in here </p>
 {% endif %}
+
+<!-- If there's no user files, user shouldn't be able to see these elements -->
+<ul id="userFiles">
+
+</ul>
 
 <script>
 
@@ -59,6 +65,17 @@ function validateNumber() {
     return recordsNumber
 }
 
+function createFilename(schemaName, number) {
+    const d = new Date;
+    const timestamp = [d.getFullYear(),
+               d.getMonth()+1,
+               d.getDate()].join('-') + '_' +
+              [d.getHours(),
+               d.getMinutes(),
+               d.getSeconds()].join(':');
+    return schemaName + "-" + number + "_" + timestamp + ".csv"
+}
+
 function getCookie(name) {
     let cookieValue = null;
     if (document.cookie && document.cookie !== '') {
@@ -77,11 +94,11 @@ function getCookie(name) {
 
 const csrftoken = getCookie('csrftoken');
 
-function sendRequest(name, number) {
+function sendRequest(name, number, filename) {
     
     const url = document.getElementById("generateBtn").dataset.url;
 
-    const data = {name: name, number: number};
+    const post_data = {name: name, number: number, filename: filename};
 
     fetch(url, {
         method: "POST",
@@ -91,13 +108,20 @@ function sendRequest(name, number) {
             "X-Requested-With": "XMLHttpRequest",
             "X-CSRFToken": csrftoken,
         },
-        body: JSON.stringify({"post_data":data}),
+        body: JSON.stringify({"post_data": post_data}),
         redirect: "follow"
     })
         .then(response => response.json())
         .then(data => {
             console.log(data);
         })
+}
+
+function createUserFileElement(filename) {
+    const li = document.createElement("li");
+        li.setAttribute("id", filename);
+        li.innerHTML = filename;
+        document.getElementById("userFiles").appendChild(li);
 }
 
 function generateData() {
@@ -112,8 +136,10 @@ function generateData() {
 
     const chosenSchemaName = document.querySelector('input[name="schema"]:checked').value;
     
-    console.log(chosenSchemaName, recordsNumber);
-    sendRequest(chosenSchemaName, recordsNumber);
+    const filename = createFilename(chosenSchemaName, recordsNumber);
+    console.log(chosenSchemaName, recordsNumber, filename);
+    sendRequest(chosenSchemaName, recordsNumber, filename);
+    createUserFileElement(filename)
     console.log("done!");
 }
     

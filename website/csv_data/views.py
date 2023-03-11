@@ -1,5 +1,8 @@
+import csv
 import json
-import time
+from random import randint
+
+from faker import Faker
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import JsonResponse
@@ -30,15 +33,80 @@ class GenerateDataView(LoginRequiredMixin, View):
         data = json.load(request)["post_data"]
         try:
             schema = DataSchema.objects.get(name=data["name"])
-            response_data = self._create_csv_file(schema, data["number"])
+            response_data = self._create_csv_file(
+                filename=data["filename"],
+                schema=schema,
+                number=data["number"]
+            )
             return JsonResponse(data={"data": response_data})
         except DataSchema.DoesNotExist:
             # todo: think about proper response
             return False
 
-    def _create_csv_file(self, schema, number):
-        time.sleep(5)
-        return "ok"
+    @staticmethod
+    def _extract_fieldnames(fieldnames: list) -> list:
+        """
+        Keeps the order of the list. Makes field names more human-readable.
+        "Full-name" -> "Full name"
+        "Domain-name" -> "Domain name"
+        "Phone-number" -> "Phone number"
+        "Company-name" -> "Company name"
+        "Job", "Email", "Text", "Integer", "Address", "Date" stay the same.
+        :param fieldnames:
+        :return:
+        """
+        for i in range(len(fieldnames)):
+            if "-" in fieldnames[i]:
+                fieldnames[i] = " ".join(fieldnames[i].split("-"))
+        return fieldnames
+
+    @staticmethod
+    def _write_csv_row(writer, fieldnames, schema, fake):
+        row = {}
+        for field_name in fieldnames:
+            if field_name == "Full name":
+                row[field_name] = fake.name()
+            elif field_name == "Job":
+                row[field_name] = fake.job()
+            elif field_name == "Email":
+                row[field_name] = fake.company_email()
+            elif field_name == "Domain name":
+                row[field_name] = fake.domain_name()
+            elif field_name == "Phone number":
+                row[field_name] = fake.phone_number()
+            elif field_name == "Company name":
+                row[field_name] = fake.company()
+            elif field_name == "Text":
+                num_sentences = randint(
+                    a=int(schema.get("textMin")) or 1,
+                    b=int(schema.get("textMax")) or 100
+                )
+                row[field_name] = fake.paragraph(nb_sentences=num_sentences)
+            elif field_name == "Integer":
+                row[field_name] = randint(
+                    a=int(schema.get("integerMin")) or 1,
+                    b=int(schema.get("integerMax")) or 9999
+                )
+            elif field_name == "Address":
+                row[field_name] = fake.address()
+            elif field_name == "Date":
+                row[field_name] = fake.date()
+        writer.writerow(row)
+        return writer
+
+    def _create_csv_file(self, filename, schema, number):
+        fieldnames = self._extract_fieldnames(schema["orderedList"])
+
+        Faker.seed(randint(1, 999999999))
+        fake = Faker()
+
+        with open(filename, mode="w") as csv_file:
+            writer = csv.DictWriter(csv_file, fieldnames)
+            writer.writeheader()
+
+            for i in range(number):
+                self._write_csv_row(writer, fieldnames, schema, fake)
+            return csv_file
 
 
 class DataSchemaView(LoginRequiredMixin, TemplateView):
