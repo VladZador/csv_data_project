@@ -33,13 +33,13 @@ class GenerateDataView(LoginRequiredMixin, View):
     def post(self, request, *args, **kwargs):
         data = json.load(request)["post_data"]
         try:
-            schema = DataSchema.objects.get(name=data["name"])
+            schema_record = DataSchema.objects.get(name=data["name"])
             response_data = self._create_csv_file(
                 filename=data["filename"],
-                schema=schema,
+                schema=schema_record.schema,
                 number=data["number"]
             )
-            return JsonResponse(data={"data": response_data})
+            return JsonResponse(data={"data": "created"})
         except DataSchema.DoesNotExist:
             # todo: think about proper response
             return False
@@ -47,16 +47,18 @@ class GenerateDataView(LoginRequiredMixin, View):
     @staticmethod
     def _extract_fieldnames(fieldnames: list) -> list:
         """
-        Keeps the order of the list. Makes field names more human-readable.
-        "Full-name" -> "Full name"
-        "Domain-name" -> "Domain name"
-        "Phone-number" -> "Phone number"
-        "Company-name" -> "Company name"
-        "Job", "Email", "Text", "Integer", "Address", "Date" stay the same.
+        Keeps the order of the list. Makes field names capitalized and more
+        human-readable. "job", "email", "text", "integer", "address", "date"
+        are only capitalized.
+        "full-name" -> "Full name"
+        "domain-name" -> "Domain name"
+        "phone-number" -> "Phone number"
+        "company-name" -> "Company name"
         :param fieldnames:
         :return:
         """
         for i in range(len(fieldnames)):
+            fieldnames[i] = fieldnames[i].capitalize()
             if "-" in fieldnames[i]:
                 fieldnames[i] = " ".join(fieldnames[i].split("-"))
         return fieldnames
@@ -86,7 +88,7 @@ class GenerateDataView(LoginRequiredMixin, View):
             elif field_name == "Integer":
                 row[field_name] = randint(
                     a=int(schema.get("integerMin")) or 1,
-                    b=int(schema.get("integerMax")) or 9999
+                    b=int(schema.get("integerMax")) or 999999999
                 )
             elif field_name == "Address":
                 row[field_name] = fake.address()
@@ -102,7 +104,9 @@ class GenerateDataView(LoginRequiredMixin, View):
         fake = Faker()
 
         with open(settings.MEDIA_ROOT / filename, mode="w") as csv_file:
-            writer = csv.DictWriter(csv_file, fieldnames)
+            writer = csv.DictWriter(
+                csv_file, fieldnames, quoting=csv.QUOTE_NONNUMERIC
+            )
             writer.writeheader()
 
             for i in range(number):
