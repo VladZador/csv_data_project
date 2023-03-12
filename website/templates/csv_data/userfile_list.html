@@ -14,7 +14,7 @@
 {% block content %}
 
 <h3>Choose data schema</h3>
-<!-- If there's no user schema , user should be able only to create one -->
+<!-- If there's no user schema, user should be able only to create one -->
 {% if schemas %}
 {% for schema in schemas.iterator %}
 
@@ -32,9 +32,11 @@ onclick="this.className = ''">
 <p> There's nothing in here </p>
 {% endif %}
 
-<!-- If there's no user files, user shouldn't be able to see these elements -->
+<!-- remake form the list to the table -->
 <ul id="userFiles">
-
+    {% for file in object_list %}
+    <li id="{{ file.filename }}">{{ file.filename }}</li>
+    {% endfor %}
 </ul>
 
 <script src="{% static 'scripts/userfile_list.js' %}"></script>

@@ -34,18 +34,24 @@ class GenerateDataView(LoginRequiredMixin, View):
         data = json.load(request)["post_data"]
         try:
             schema_record = DataSchema.objects.get(name=data["name"])
-            response_data = self._create_csv_file(
-                filename=data["filename"],
+            self._create_csv_file(
+                filename=settings.MEDIA_ROOT / data["filename"],
                 schema=schema_record.schema,
                 number=data["number"]
             )
-            return JsonResponse(data={"data": "created"})
+            UserFile.objects.create(
+                user=request.user,
+                filename=data["filename"]
+            )
+            return JsonResponse(data={
+                "data": reverse_lazy("user_files")
+                + "media/" + data["filename"]
+            })
         except DataSchema.DoesNotExist:
-            # todo: think about proper response
-            return False
+            return JsonResponse(data={"error": "invalid data schema"})
 
     @staticmethod
-    def _extract_fieldnames(fieldnames: list) -> list:
+    def _extract_fieldnames(old_fieldnames: list) -> list:
         """
         Keeps the order of the list. Makes field names capitalized and more
         human-readable. "job", "email", "text", "integer", "address", "date"
@@ -54,13 +60,15 @@ class GenerateDataView(LoginRequiredMixin, View):
         "domain-name" -> "Domain name"
         "phone-number" -> "Phone number"
         "company-name" -> "Company name"
-        :param fieldnames:
+        :param old_fieldnames:
         :return:
         """
-        for i in range(len(fieldnames)):
-            fieldnames[i] = fieldnames[i].capitalize()
-            if "-" in fieldnames[i]:
-                fieldnames[i] = " ".join(fieldnames[i].split("-"))
+        fieldnames = []
+        for field_name in old_fieldnames:
+            field_name = field_name.capitalize()
+            if "-" in field_name:
+                field_name = " ".join(field_name.split("-"))
+            fieldnames.append(field_name)
         return fieldnames
 
     @staticmethod
@@ -81,14 +89,14 @@ class GenerateDataView(LoginRequiredMixin, View):
                 row[field_name] = fake.company()
             elif field_name == "Text":
                 num_sentences = randint(
-                    a=int(schema.get("textMin")) or 1,
-                    b=int(schema.get("textMax")) or 100
+                    a=int(schema.get("textMin") or 1),
+                    b=int(schema.get("textMax") or 100)
                 )
                 row[field_name] = fake.paragraph(nb_sentences=num_sentences)
             elif field_name == "Integer":
                 row[field_name] = randint(
-                    a=int(schema.get("integerMin")) or 1,
-                    b=int(schema.get("integerMax")) or 999999999
+                    a=int(schema.get("integerMin") or 1),
+                    b=int(schema.get("integerMax") or 999999999)
                 )
             elif field_name == "Address":
                 row[field_name] = fake.address()
@@ -103,7 +111,7 @@ class GenerateDataView(LoginRequiredMixin, View):
         Faker.seed(randint(1, 999999999))
         fake = Faker()
 
-        with open(settings.MEDIA_ROOT / filename, mode="w") as csv_file:
+        with open(filename, mode="w") as csv_file:
             writer = csv.DictWriter(
                 csv_file, fieldnames, quoting=csv.QUOTE_NONNUMERIC
             )
@@ -111,7 +119,6 @@ class GenerateDataView(LoginRequiredMixin, View):
 
             for i in range(number):
                 self._write_csv_row(writer, fieldnames, schema, fake)
-            return csv_file
 
 
 class DataSchemaView(LoginRequiredMixin, TemplateView):
@@ -124,14 +131,15 @@ class DataSchemaCreateView(LoginRequiredMixin, View):
     @staticmethod
     def post(request, *args, **kwargs):
         """
-        :param request: json.load(request)["post_data"] = {
+        json.load(request)["post_data"] = {
             "name": "SchemaName",
             "schema": {
-                "orderedList": ["fullName", "job"],
+                "orderedList": ["full-name", "job", "text"],
                 "textMin": 2,
                 "textMax": 5
             }
         }
+        :param request:
         :param args:
         :param kwargs:
         :return:

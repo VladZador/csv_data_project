@@ -27,12 +27,21 @@ function validateNumber() {
 
 function createFilename(schemaName, number) {
     const d = new Date;
+
+    function padLeft(num) {
+        const str = String(num);
+        if (str.length == 1) {
+            return "0" + str
+        } else {
+            return str
+        }
+    }
     const timestamp = [d.getFullYear(),
-               d.getMonth()+1,
-               d.getDate()].join('-') + '_' +
-              [d.getHours(),
-               d.getMinutes(),
-               d.getSeconds()].join(':');
+               padLeft(d.getMonth()+1),
+               padLeft(d.getDate())].join('-') + '_' +
+              [padLeft(d.getHours()),
+               padLeft(d.getMinutes()),
+               padLeft(d.getSeconds())].join(':');
     return schemaName + "-" + number + "_" + timestamp + ".csv"
 }
 
@@ -99,6 +108,5 @@ function generateData() {
     const filename = createFilename(chosenSchemaName, recordsNumber);
     console.log(chosenSchemaName, recordsNumber, filename);
     sendRequest(chosenSchemaName, recordsNumber, filename);
-    createUserFileElement(filename)
-    console.log("done!");
+    createUserFileElement(filename);
 }
