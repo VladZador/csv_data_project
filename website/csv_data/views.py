@@ -9,8 +9,9 @@ from django.http import JsonResponse
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
 from django.views import View
-from django.views.generic import ListView, TemplateView, DetailView
+from django.views.generic import ListView, TemplateView
 from django.contrib import messages
+from django.conf import settings
 
 from .models import UserFile, DataSchema
 from website.decorators import ajax_required
@@ -100,7 +101,7 @@ class GenerateDataView(LoginRequiredMixin, View):
         Faker.seed(randint(1, 999999999))
         fake = Faker()
 
-        with open(filename, mode="w") as csv_file:
+        with open(settings.MEDIA_ROOT / filename, mode="w") as csv_file:
             writer = csv.DictWriter(csv_file, fieldnames)
             writer.writeheader()
 
