@@ -22,6 +22,8 @@ class UserFileView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, *args, object_list=None, **kwargs):
         context = super().get_context_data(object_list=None, **kwargs)
+        user_files = UserFile.objects.filter(user=self.request.user)
+        context.update({"object_list": user_files})
         schemas = DataSchema.objects.filter(user=self.request.user)
         context.update({"schemas": schemas})
         return context
@@ -44,8 +46,7 @@ class GenerateDataView(LoginRequiredMixin, View):
                 filename=data["filename"]
             )
             return JsonResponse(data={
-                "data": reverse_lazy("user_files")
-                + "media/" + data["filename"]
+                "filename": data["filename"]
             })
         except DataSchema.DoesNotExist:
             return JsonResponse(data={"error": "invalid data schema"})

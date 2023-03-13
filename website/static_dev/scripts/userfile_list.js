@@ -82,15 +82,48 @@ function sendRequest(name, number, filename) {
     })
         .then(response => response.json())
         .then(data => {
-            console.log(data);
+            changeUserFileElement(data.filename)
         })
 }
 
 function createUserFileElement(filename) {
-    const li = document.createElement("li");
-        li.setAttribute("id", filename);
-        li.innerHTML = filename;
-        document.getElementById("userFiles").appendChild(li);
+    const th1 = document.createElement("th");
+    th1.innerHTML = filename;
+
+    const th2 = document.createElement("th");
+    th2.setAttribute("class", "statusProcess");
+    th2.innerHTML = "Processing";
+
+    const th3 = document.createElement("th");
+    th3.setAttribute("class", "link");
+
+    const tr = document.createElement("tr");
+    tr.setAttribute("id", filename);
+    tr.appendChild(th1);
+    tr.appendChild(th2);
+    tr.appendChild(th3);
+
+    const tbody = document.getElementById("tableBody");
+    if (tbody.childElementCount === 0) {
+        tbody.appendChild(tr);
+    } else {
+        const firstChild = tbody.firstElementChild;
+        tbody.insertBefore(tr, firstChild);
+    }
+}
+
+function changeUserFileElement(filename) {
+    const tr = document.getElementById(filename);
+    const th2 = tr.getElementsByClassName("statusProcess")[0];
+    th2.setAttribute("class", "statusReady");
+    th2.innerHTML = "Ready";
+    
+    const href = document.createElement("a");
+    href.setAttribute("href", "/media/" + filename);
+    href.innerHTML = "Download";
+    
+    const th3 = tr.getElementsByClassName("link")[0];
+    th3.appendChild(href);
 }
 
 function generateData() {
@@ -106,7 +139,6 @@ function generateData() {
     const chosenSchemaName = document.querySelector('input[name="schema"]:checked').value;
 
     const filename = createFilename(chosenSchemaName, recordsNumber);
-    console.log(chosenSchemaName, recordsNumber, filename);
     sendRequest(chosenSchemaName, recordsNumber, filename);
     createUserFileElement(filename);
 }

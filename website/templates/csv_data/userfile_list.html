@@ -8,37 +8,53 @@
     input.invalid {
         background-color: #ffdddd;
     }
+    .statusReady {
+        color: green;
+    }
+    .statusProcess {
+        color:  gold;
+    }
 </style>
 {% endblock %}
 
 {% block content %}
 
-<h3>Choose data schema</h3>
-<!-- If there's no user schema, user should be able only to create one -->
-{% if schemas %}
-{% for schema in schemas.iterator %}
+    <h3>Choose data schema</h3>
 
-    <p><input type="radio" id="{{ schema.name }}" name="schema" value="{{ schema.name }}">
-    <label for="{{ schema.name }}">{{ schema.name }}</label></p>
-
-{% endfor %}
-<h3>Enter the number of records to generate</h3>
-<input type="text" id="recordsNumber" name="recordsNumber"
-onclick="this.className = ''">
-
-<button type="button" id="generateBtn" data-url="{% url 'generate_data' %}" onclick="generateData()">Generate data</button>
-</form>
-{% else %}
-<p> There's nothing in here </p>
-{% endif %}
-
-<!-- remake form the list to the table -->
-<ul id="userFiles">
-    {% for file in object_list %}
-    <li id="{{ file.filename }}">{{ file.filename }}</li>
+    {% if schemas %}
+    {% for schema in schemas.iterator %}
+        <p><input type="radio" id="{{ schema.name }}" name="schema" value="{{ schema.name }}">
+        <label for="{{ schema.name }}">{{ schema.name }}</label></p>
     {% endfor %}
-</ul>
 
-<script src="{% static 'scripts/userfile_list.js' %}"></script>
+    <h3>Enter the number of records to generate</h3>
+    <input type="text" id="recordsNumber" name="recordsNumber"
+    onclick="this.className = ''">
+    <button type="button" id="generateBtn" data-url="{% url 'generate_data' %}" 
+    onclick="generateData()">Generate data</button>
+    {% else %}
+    <p>You don't have any schema yet.</p>
+    {% endif %}
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">Filename</th>
+                <th scope="col">Status</th>
+                <th scope="col">Download link</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody">
+            {% for file in object_list reversed %}
+            <tr id="{{ file.filename }}">
+                <th>{{ file.filename }}</th>
+                <th class="statusReady">Ready</th>
+                <th class="link"><a href="/media/{{ file.filename }}">Download</a></th>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <script src="{% static 'scripts/userfile_list.js' %}"></script>
 
 {% endblock %}
