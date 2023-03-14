@@ -1,3 +1,12 @@
+$(function() {
+    $("#sortableList").sortable({
+        axis: "y",
+        containment: "#orderColumns",
+        opacity: 0.6,
+        cursor: 'move',
+    });
+});
+
 function dataTypeClick(checkId, labelId, itemId, text) {
     const checkBox = document.getElementById(checkId);
     const label = document.getElementById(labelId);
@@ -8,7 +17,7 @@ function dataTypeClick(checkId, labelId, itemId, text) {
         li.innerHTML = text;
         document.getElementById("sortableList").appendChild(li);
     } else {
-        label.style.opacity = "0.25";
+        label.style.opacity = "0.5";
         document.getElementById(itemId).remove();
     }
 }
@@ -27,7 +36,7 @@ function textOrIntegerClick(checkId, formId, labelId, itemId, text) {
         document.getElementById("sortableList").appendChild(li);
     } else {
         form.style.display = "none";
-        label.style.opacity = "0.25";
+        label.style.opacity = "0.5";
         document.getElementById(itemId).remove();
         const forms = document.getElementById(formId).getElementsByTagName("input");
         for (let form of forms) {
@@ -88,7 +97,7 @@ function invalidInputReceived(form, textOrInt, minOrMax) {
 function textExceedMaxReceived(form, textOrInt, minOrMax) {
     form.className = "invalid";
     form.value = "";
-    form.placeholder = "Text range should not exceed 100 sentences";
+    form.placeholder = "Should not exceed 100";
     document.getElementById(textOrInt).removeAttribute("data-" + textOrInt + minOrMax);
 }
 
@@ -160,7 +169,7 @@ function validateTextOrIntForm (textOrInt) {
         } else if (max < min) {
             maxForm.className = "invalid";
             maxForm.value = "";
-            maxForm.placeholder = "The upper limit must be greater than the lower";
+            maxForm.placeholder = "Max must be greater than min";
         } else {
             document.getElementById(textOrInt).setAttribute("data-" + textOrInt + "-min", min);
             document.getElementById(textOrInt).setAttribute("data-" + textOrInt + "-max", max);
@@ -284,8 +293,5 @@ function sendRequest() {
             .then(data => {
                 location.assign(data.redirectUrl);
             })
-            .catch(function(error) {
-                console.log(error)
-            });
     }
 }

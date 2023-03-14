@@ -87,21 +87,21 @@ function sendRequest(name, number, filename) {
 }
 
 function createUserFileElement(filename) {
-    const th1 = document.createElement("th");
-    th1.innerHTML = filename;
+    const td1 = document.createElement("td");
+    td1.innerHTML = filename;
 
-    const th2 = document.createElement("th");
-    th2.setAttribute("class", "statusProcess");
-    th2.innerHTML = "Processing";
+    const td2 = document.createElement("td");
+    td2.setAttribute("class", "statusProcess");
+    td2.innerHTML = "Processing";
 
-    const th3 = document.createElement("th");
-    th3.setAttribute("class", "link");
+    const td3 = document.createElement("td");
+    td3.setAttribute("class", "link");
 
     const tr = document.createElement("tr");
     tr.setAttribute("id", filename);
-    tr.appendChild(th1);
-    tr.appendChild(th2);
-    tr.appendChild(th3);
+    tr.appendChild(td1);
+    tr.appendChild(td2);
+    tr.appendChild(td3);
 
     const tbody = document.getElementById("tableBody");
     if (tbody.childElementCount === 0) {
@@ -114,16 +114,18 @@ function createUserFileElement(filename) {
 
 function changeUserFileElement(filename) {
     const tr = document.getElementById(filename);
-    const th2 = tr.getElementsByClassName("statusProcess")[0];
-    th2.setAttribute("class", "statusReady");
-    th2.innerHTML = "Ready";
+    const td2 = tr.getElementsByClassName("statusProcess")[0];
+    td2.setAttribute("class", "statusReady");
+    td2.innerHTML = "Ready";
     
     const href = document.createElement("a");
+    href.setAttribute("class", "btn btn-primary");
     href.setAttribute("href", "/media/" + filename);
+    href.setAttribute("role", "button");
     href.innerHTML = "Download";
     
-    const th3 = tr.getElementsByClassName("link")[0];
-    th3.appendChild(href);
+    const td3 = tr.getElementsByClassName("link")[0];
+    td3.appendChild(href);
 }
 
 function generateData() {

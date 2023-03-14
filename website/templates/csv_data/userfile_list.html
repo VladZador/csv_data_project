@@ -1,59 +1,65 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}CSV data{% endblock %}
-
-{% block external %}
-<style>
-    input.invalid {
-        background-color: #ffdddd;
-    }
-    .statusReady {
-        color: green;
-    }
-    .statusProcess {
-        color:  gold;
-    }
-</style>
-{% endblock %}
-
 {% block content %}
 
-    <h3>Choose data schema</h3>
+<div class="container container-margins">
+    <div class="row">
+        <div class="col-5">
+            <div class="box">
+                <!-- Data schemas header -->
+                <div class="col-container d-flex align-items-center justify-content-evenly" style="padding: 20px 0 10px 0;">
+                    <h3 style="display:inline;">Data schemas</h3>
+                    <a style="display:inline;" class="btn btn-outline-success" href="{% url 'create_schema' %}" 
+                    role="button">Create new schema</a>
+                </div>
 
-    {% if schemas %}
-    {% for schema in schemas.iterator %}
-        <p><input type="radio" id="{{ schema.name }}" name="schema" value="{{ schema.name }}">
-        <label for="{{ schema.name }}">{{ schema.name }}</label></p>
-    {% endfor %}
+                {% if schemas %}
+                <!-- Radio buttons -->
+                <p><b>Choose data schema:</b></p>
+                {% for schema in schemas.iterator %}
+                    <p><input class="form-check-input" type="radio" id="{{ schema.name }}" name="schema" value="{{ schema.name }}">
+                    <label for="{{ schema.name }}">{{ schema.name }}</label></p>
+                {% endfor %}
+                
+                <!-- Records number form -->
+                <p><b>Enter the number of records to generate:</b></p>
+                <div class="col-container d-flex align-items-center justify-content-evenly">
+                    <input type="text" id="recordsNumber" name="recordsNumber"
+                    onclick="this.className = ''">
+                    <button type="button" id="generateBtn" data-url="{% url 'generate_data' %}" 
+                    onclick="generateData()" class="btn btn-primary">Generate data</button>
+                </div>
+                {% else %}
+                <p>You don't have any schema yet. </p>
+                {% endif %}
+            </div>
+        </div>
 
-    <h3>Enter the number of records to generate</h3>
-    <input type="text" id="recordsNumber" name="recordsNumber"
-    onclick="this.className = ''">
-    <button type="button" id="generateBtn" data-url="{% url 'generate_data' %}" 
-    onclick="generateData()">Generate data</button>
-    {% else %}
-    <p>You don't have any schema yet.</p>
-    {% endif %}
-
-    <table class="table">
-        <thead>
-            <tr>
-                <th scope="col">Filename</th>
-                <th scope="col">Status</th>
-                <th scope="col">Download link</th>
-            </tr>
-        </thead>
-        <tbody id="tableBody">
-            {% for file in object_list reversed %}
-            <tr id="{{ file.filename }}">
-                <th>{{ file.filename }}</th>
-                <th class="statusReady">Ready</th>
-                <th class="link"><a href="/media/{{ file.filename }}">Download</a></th>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+        <div class="col">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th scope="col">Filename</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Download link</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    {% for file in object_list reversed %}
+                    <tr id="{{ file.filename }}">
+                        <td>{{ file.filename }}</td>
+                        <td class="statusReady">Ready</td>
+                        <td class="link">
+                            <a class="btn btn-primary" href="/media/{{ file.filename }}" 
+                            role="button">Download</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
 
     <script src="{% static 'scripts/userfile_list.js' %}"></script>
 
