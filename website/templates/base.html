@@ -16,9 +16,13 @@
 </head>
 <body>
 
+  {% block navbar %}
+    {% include "parts/navbar.html" %}
+  {% endblock %}
+
   {% block messages %}
     {% include "parts/messages.html" %}
-  {% endblock messages %}
+  {% endblock %}
 
  {% block content %}{% endblock %}
 </body>

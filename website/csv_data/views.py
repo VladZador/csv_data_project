@@ -17,6 +17,10 @@ from .models import UserFile, DataSchema
 from website.decorators import ajax_required
 
 
+class MainView(TemplateView):
+    template_name = "index.html"
+
+
 class UserFileView(LoginRequiredMixin, ListView):
     model = UserFile
 
@@ -153,6 +157,9 @@ class DataSchemaCreateView(LoginRequiredMixin, View):
         )
         if not created:
             messages.success(request, "You already have this schema")
+            return JsonResponse(
+                data={"redirectUrl": reverse_lazy("create_schema")}
+            )
         return JsonResponse(
             data={"redirectUrl": reverse_lazy("user_files")}
         )

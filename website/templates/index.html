@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container container-margins">
+    <p style="font-size: 30px">Hello! You're using our service for generating
+        CSV files with fake data!</p>
+    <p style="font-size: 30px">You must be logged in to use the full potential
+        of our product. It will allow to save the schemas you created for your
+        needs so that you can use them again and have access to all the CSV
+        files generated from those schemas.</p>
+    <div class="container text-center">
+        {% if request.user.is_authenticated %}
+        <a class="btn btn-outline-primary" role="button" href="{% url 'user_files' %}" 
+        style="font-size: 30px">Get started creating your CSV file!</a>
+        {% else %}
+        <a class="btn btn-outline-primary" role="button" href="{% url 'login' %}" 
+        style="font-size: 30px">Log in</a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

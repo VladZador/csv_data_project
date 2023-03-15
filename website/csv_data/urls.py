@@ -1,11 +1,12 @@
 from django.urls import path
 
 from .views import UserFileView, DataSchemaView, DataSchemaCreateView, \
-    GenerateDataView
+    GenerateDataView, MainView
 
 urlpatterns = [
-    path('', UserFileView.as_view(), name="user_files"),
-    path('generate-data/',
+    path('', MainView.as_view(), name="main"),
+    path('csv-files/', UserFileView.as_view(), name="user_files"),
+    path('csv-files/generate-data/',
          GenerateDataView.as_view(),
          name="generate_data"),
     path('create-schema/',
