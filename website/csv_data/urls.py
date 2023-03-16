@@ -1,7 +1,7 @@
 from django.urls import path
 
 from .views import UserFileView, DataSchemaView, DataSchemaCreateView, \
-    GenerateDataView, MainView
+    GenerateDataView, MainView, download_file
 
 urlpatterns = [
     path('', MainView.as_view(), name="main"),
@@ -15,4 +15,5 @@ urlpatterns = [
     path("create-schema/confirm/",
          DataSchemaCreateView.as_view(),
          name="confirm_schema_creation"),
+    path("media/<str:filename>/", download_file, name="download_file"),
 ]

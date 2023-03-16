@@ -5,7 +5,8 @@ from random import randint
 from faker import Faker
 
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse, HttpResponse
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
 from django.views import View
@@ -163,3 +164,14 @@ class DataSchemaCreateView(LoginRequiredMixin, View):
         return JsonResponse(
             data={"redirectUrl": reverse_lazy("user_files")}
         )
+
+
+@login_required
+def download_file(request, *args, **kwargs):
+    filename = kwargs["filename"]
+    file_path = settings.MEDIA_ROOT / filename
+
+    with open(file_path, 'r') as file:
+        response = HttpResponse(file, content_type="text/csv")
+        response['Content-Disposition'] = f"attachment; filename={filename}"
+    return response
