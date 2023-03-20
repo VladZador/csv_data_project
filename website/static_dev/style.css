@@ -1,3 +1,6 @@
+.mainText {
+  font-size: 20px;
+}
 input.invalid {
   background-color: #ffdddd;
 }
