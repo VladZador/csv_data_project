@@ -6,100 +6,93 @@
 {% block external %}
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
 <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
-<script>
-$(function(){
-    $('input[type=checkbox]').prop("checked", false);
-});
-</script>
 {% endblock %}
 
 {% block content %}
 
 <div class="container container-margins">
-    <div id="chooseColumns" class="tab">
-        <h2>Choose columns for your data schema:</h2>
+    <div class="row">
+        <div id="chooseColumns" class="col">
+            <h2>Choose columns for your data schema:</h2>
 
-        <p>Choose which columns to include in the schema. You can change the order of the columns later.</p>
+            <p>Choose which columns to include in the schema. You can change the order of the columns later.</p>
 
-        <div class="form-check">
-            <input class="form-check-input" type="checkbox" id="fullNameCheck" onclick="fullNameClick()">
-            <label class="form-check-label" for="fullNameCheck" id="fullNameLabel" style="opacity:0.5">Full name</label></div>
-        <div class="form-check">
-            <input class="form-check-input" type="checkbox" id="jobCheck" onclick="jobClick()">
-            <label class="form-check-label" for="jobCheck" id="jobLabel" style="opacity:0.5">Job</label></div>
-        <div class="form-check">
-            <input class="form-check-input" type="checkbox" id="emailCheck" onclick="emailClick()">
-            <label class="form-check-label" for="emailCheck" id="emailLabel" style="opacity:0.5">Email</label></div>
-        <div class="form-check">
-            <input class="form-check-input" type="checkbox" id="domainCheck" onclick="domainClick()">
-            <label class="form-check-label" for="domainCheck" id="domainLabel" style="opacity:0.5">Domain name</label></div>
-        <div class="form-check">
-            <input class="form-check-input" type="checkbox" id="phoneCheck" onclick="phoneClick()">
-            <label class="form-check-label" for="phoneCheck" id="phoneLabel" style="opacity:0.5">Phone number</label></div>
-        <div class="form-check">
-            <input class="form-check-input" type="checkbox" id="companyCheck" onclick="companyClick()">
-            <label class="form-check-label" for="companyCheck" id="companyLabel" style="opacity:0.5">Company name</label></div>
-        <div class="form-check">
-            <input class="form-check-input" type="checkbox" id="textCheck" onclick="textClick()">
-            <label class="form-check-label" for="textCheck" id="textLabel" style="opacity:0.5">Text</label>
-            <div id="textRangeForm" class="input-group" style="display:none">
-                <p style="margin-top:10px;">Enter a range for a number of sentences in the text.</p>
-                <p>Enter one or both range limits in the fields. If you leave 
-                    any field blank, a random number will be used for it (but less than 100).</p>
-                <p>
-                    <input type="text" id="textMin" onclick="this.className = ''"
-                    placeholder="Min number of sentences in a text">
-                    <input type="text" id="textMax" onclick="this.className = ''"
-                    placeholder="Max number of sentences in a text">
-                    <button onclick="validateTextOrIntForm('text')"
-                    class="btn btn-primary">Select this range</button>
-                </p>
+            <div>
+                <input type="button" class="btn btn-primary" id="fullNameButton" value="+" onclick="fullNameClick()">
+                <label for="fullNameButton">Full name</label></div>
+            <div>
+                <input type="button" class="btn btn-primary" id="jobButton" value="+" onclick="jobClick()">
+                <label for="jobButton">Job</label></div>
+            <div>
+                <input type="button" class="btn btn-primary" id="emailButton" value="+" onclick="emailClick()">
+                <label for="emailButton">Email</label></div>
+            <div>
+                <input type="button" class="btn btn-primary" id="domainButton" value="+" onclick="domainClick()">
+                <label for="domainButton">Domain name</label></div>
+            <div>
+                <input type="button" class="btn btn-primary" id="phoneButton" value="+" onclick="phoneClick()">
+                <label for="phoneButton">Phone number</label></div>
+            <div>
+                <input type="button" class="btn btn-primary" id="companyButton" value="+" onclick="companyClick()">
+                <label for="companyButton">Company name</label></div>
+            <div>
+                <input type="button" class="btn btn-primary" id="textButton" value="+" onclick="textClick()">
+                <label for="textButton">Text</label></div>
+            <div>
+                <input type="button" class="btn btn-primary" id="integerButton" value="+" onclick="integerClick()">
+                <label for="integerButton">Integer</label></div>
+            <div>
+                <input type="button" class="btn btn-primary" id="addressButton" value="+" onclick="addressClick()">
+                <label for="addressButton">Address</label></div>
+            <div>
+                <input type="button" class="btn btn-primary" id="dateButton" value="+" onclick="dateClick()">
+                <label for="dateButton">Date</label></div>
+        </div>
+
+        <div id="orderColumns" class="col">
+            <h2>Order columns by dragging them:</h2>
+            <p>For integer and text fields you can choose one or both range 
+                limits for the generated number or the number of generated 
+                sentences respectively. If you leave any field blank, a random
+                 number will be used for it.</p>
+
+            <ul id="sortableList" class="sortable">
+                <!-- Columns chosen by a user will appear here -->
+            </ul>
+            <p>And choose the name for your data schema:</p>
+            <input type="text" id="schemaName" name="schemaName"
+            oninput="this.className = ''">
+
+            <div class="buttons">
+                <button type="button" class="btn btn-primary" class="btn btn-primary" id="confirmButton" 
+                data-url="{% url 'confirm_schema_creation' %}"
+                onclick="sendRequest()">Create</button>
             </div>
         </div>
-        <div class="form-check">
-            <input class="form-check-input" type="checkbox" id="integerCheck" onclick="integerClick()">
-            <label class="form-check-label" for="integerCheck" id="integerLabel" style="opacity:0.5">Integer</label>
-            <div id="integerRangeForm" class="input-group" style="display:none">
-                <p style="margin-top:10px;">Enter a range for the number to be generated.</p>
-                <p>Enter one or both range limits in the fields. If you leave 
-                    any field blank, a random number will be used for it.</p>
-                <p>
-                    <input type="text" id="integerMin" onclick="this.className = ''"
-                    placeholder="Minimum range limit">
-                    <input type="text" id="integerMax" onclick="this.className = ''"
-                    placeholder="Maximum range limit">
-                    <button onclick="validateTextOrIntForm('integer')"
-                    class="btn btn-primary">Select this range</button>
-                </p>
-            </div>
-        </div>
-        <div class="form-check">
-            <input class="form-check-input" type="checkbox" id="addressCheck" onclick="addressClick()">
-            <label class="form-check-label" for="addressCheck" id="addressLabel" style="opacity:0.5">Address</label></div>
-        <div class="form-check">
-            <input class="form-check-input" type="checkbox" id="dateCheck" onclick="dateClick()">
-            <label class="form-check-label" for="dateCheck" id="dateLabel" style="opacity:0.5">Date</label></div>
-    </div>
-
-    <div id="orderColumns" class="tab" style="display: none">
-        <h2>Order columns by dragging them:</h2>
-        <ul id="sortableList" class="sortable">
-            <!-- Columns chosen by a user will appear here -->
-        </ul>
-        <p>And choose the name for your data schema:</p>
-        <input type="text" id="schemaName" name="schemaName"
-        oninput="this.className = ''">
-    </div>
-
-
-    <div class="buttons">
-        <button type="button" class="btn btn-primary" id="prevBtn" onclick="goBack()" style="display: none">&lsaquo; Back</button>
-        <button type="button" class="btn btn-primary" id="nextBtn" onclick="goNext()">Next &rsaquo;</button>
-        <button type="button" class="btn btn-primary" id="confrmBtn" 
-        data-url="{% url 'confirm_schema_creation' %}"
-        onclick="sendRequest()" style="display: none">Create</button>
     </div>
 </div>
+
+<!-- templates for range forms -->
+<div style="display: none">
+    <inline class="textRangeForm">
+            <input type="text" class="textMin" onclick="this.className = 'textMin'" size="6"
+            placeholder="Min number of sentences in a text">
+            <input type="text" class="textMax" onclick="this.className = 'textMax'" size="6"
+            placeholder="Max number of sentences in a text">
+            <button onclick="validateTextOrIntForm(this.parentNode, 'text')"
+            class="btn btn-primary">Select this range</button>
+    </inline>
+
+    <inline class="integerRangeForm">
+            <input type="text" class="integerMin" onclick="this.className = 'integerMin'" size="6"
+            placeholder="Minimum range limit">
+            <input type="text" class="integerMax" onclick="this.className = 'integerMax'" size="6"
+            placeholder="Maximum range limit">
+            <button onclick="validateTextOrIntForm(this.parentNode, 'integer')"
+            class="btn btn-primary">Select this range</button>
+    </inline>
+</div>
+
 
 <script src="{% static 'scripts/create_schema.js' %}"></script>
 

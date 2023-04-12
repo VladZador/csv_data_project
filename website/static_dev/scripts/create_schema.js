@@ -7,144 +7,124 @@ $(function() {
     });
 });
 
-function dataTypeClick(checkId, labelId, itemId, text) {
-    const checkBox = document.getElementById(checkId);
-    const label = document.getElementById(labelId);
-    if (checkBox.checked === true){
-        label.style.opacity = "1";
-        const li = document.createElement("li");
-        li.setAttribute("id", itemId);
-        li.innerHTML = text;
-        document.getElementById("sortableList").appendChild(li);
-    } else {
-        label.style.opacity = "0.5";
-        document.getElementById(itemId).remove();
-    }
+function dataTypeClick(itemId, text) {
+    const li = document.createElement("li");
+    li.setAttribute("class", itemId);
+    li.innerHTML = text;
+    document.getElementById("sortableList").appendChild(li);
 }
 
-function textOrIntegerClick(checkId, formId, labelId, itemId, text) {
+function textOrIntegerClick(itemId, text) {
+    const li = document.createElement("li");
+    li.setAttribute("class", itemId);
+    li.innerHTML = text;
 
-    const checkBox = document.getElementById(checkId);
-    const form = document.getElementById(formId);
-    const label = document.getElementById(labelId);
-    if (checkBox.checked === true){
-        form.style.display = "inline";
-        label.style.opacity = "1";
-        const li = document.createElement("li");
-        li.setAttribute("id", itemId);
-        li.innerHTML = text;
-        document.getElementById("sortableList").appendChild(li);
-    } else {
-        form.style.display = "none";
-        label.style.opacity = "0.5";
-        document.getElementById(itemId).remove();
-        const forms = document.getElementById(formId).getElementsByTagName("input");
-        for (let form of forms) {
-            form.value = "";
-        }
-    }
+    const formId = itemId + "RangeForm";
+
+    const form = document.getElementsByClassName(formId)[0].cloneNode(true)
+    li.appendChild(form);
+    document.getElementById("sortableList").appendChild(li);
 }
 
 function fullNameClick() {
-    dataTypeClick("fullNameCheck", "fullNameLabel", "full-name", "Full name")
+    dataTypeClick("full-name", "Full name")
 }
 
 function jobClick() {
-    dataTypeClick("jobCheck", "jobLabel", "job", "Job")
+    dataTypeClick("job", "Job")
 }
 
 function emailClick() {
-    dataTypeClick("emailCheck", "emailLabel", "email", "Email")
+    dataTypeClick("email", "Email")
 }
 
 function domainClick() {
-    dataTypeClick("domainCheck", "domainLabel", "domain-name", "Domain name")
+    dataTypeClick("domain-name", "Domain name")
 }
 
 function phoneClick() {
-    dataTypeClick("phoneCheck", "phoneLabel", "phone-number", "Phone")
+    dataTypeClick("phone-number", "Phone")
 }
 
 function companyClick() {
-    dataTypeClick("companyCheck", "companyLabel", "company-name", "Company name")
+    dataTypeClick("company-name", "Company name")
 }
 
 function textClick() {
-    textOrIntegerClick("textCheck", "textRangeForm", "textLabel", "text",
-        "Text")
+    textOrIntegerClick("text", "Text")
 }
 
 function integerClick() {
-    textOrIntegerClick("integerCheck", "integerRangeForm", "integerLabel",
-    "integer", "Integer")
+    textOrIntegerClick("integer", "Integer")
 }
 
 function addressClick() {
-    dataTypeClick("addressCheck", "addressLabel", "address", "Address")
+    dataTypeClick("address", "Address")
 }
 
 function dateClick() {
-    dataTypeClick("dateCheck", "dateLabel", "date", "Date")
+    dataTypeClick("date", "Date")
 }
 
-function invalidInputReceived(form, textOrInt, minOrMax) {
+function invalidInputReceived(form, li, textOrInt, minOrMax) {
     form.className = "invalid";
     form.value = "";
-    form.placeholder = "Input must be a positive integer";
-    document.getElementById(textOrInt).removeAttribute("data-" + textOrInt + minOrMax);
+    form.placeholder = "Must be a positive integer";
+    li.removeAttribute("data-" + textOrInt + minOrMax);
 }
 
-function textExceedMaxReceived(form, textOrInt, minOrMax) {
+function textExceedMaxReceived(form, li, textOrInt, minOrMax) {
     form.className = "invalid";
     form.value = "";
     form.placeholder = "Should not exceed 100";
-    document.getElementById(textOrInt).removeAttribute("data-" + textOrInt + minOrMax);
+    li.removeAttribute("data-" + textOrInt + minOrMax);
 }
 
-function validateTextOrIntForm (textOrInt) {
-    const minForm = document.getElementById(textOrInt + "Min");
-    const maxForm = document.getElementById(textOrInt + "Max");
+function validateTextOrIntForm(form, textOrInt) {
+
+    const li = form.parentNode;
+
+    const minForm = form.getElementsByClassName(textOrInt + "Min")[0];
+    const maxForm = form.getElementsByClassName(textOrInt + "Max")[0];
 
     const minValue = minForm.value;
     const maxValue = maxForm.value;
 
     if (minValue == "" && maxValue == "") {
-        document.getElementById(textOrInt).removeAttribute("data-" + textOrInt + "-min");
-        document.getElementById(textOrInt).removeAttribute("data-" + textOrInt + "-max");
-        
-        return true;
+        li.removeAttribute("data-" + textOrInt + "-min");
+        li.removeAttribute("data-" + textOrInt + "-max");
     } else if (minValue == "") {
         if (isNaN(maxValue)){
-            invalidInputReceived(maxForm, textOrInt, "-max");
+            invalidInputReceived(maxForm, li, textOrInt, "-max");
             return false;
         }
         const max = parseFloat(maxValue);
         if (!(Number.isInteger(max)) || max <= 0) {
-            invalidInputReceived(maxForm, textOrInt, "-max");
+            invalidInputReceived(maxForm, li, textOrInt, "-max");
         } else {
-            document.getElementById(textOrInt).removeAttribute("data-" + textOrInt + "-min");
-            document.getElementById(textOrInt).setAttribute("data-" + textOrInt + "-max", max);
+            li.removeAttribute("data-" + textOrInt + "-min");
+            li.setAttribute("data-" + textOrInt + "-max", max);
         }
     } else if (maxValue == "") {
         if (isNaN(minValue)){
-            invalidInputReceived(minForm, textOrInt, "-min");
+            invalidInputReceived(minForm, li, textOrInt, "-min");
             return false;
         }
         const min = parseFloat(minValue);
         if (!(Number.isInteger(min)) || min <= 0) {
-            invalidInputReceived(minForm, textOrInt, "-min");
+            invalidInputReceived(minForm, li, textOrInt, "-min");
         } else {
-            document.getElementById(textOrInt).removeAttribute("data-" + textOrInt + "-max");
-            document.getElementById(textOrInt).setAttribute("data-" + textOrInt + "-min", min);
+            li.removeAttribute("data-" + textOrInt + "-max");
+            li.setAttribute("data-" + textOrInt + "-min", min);
         }
     } else {
 
         if (isNaN(minValue) || isNaN(maxValue)){
             if (isNaN(minValue)){
-                invalidInputReceived(minForm, textOrInt, "-min");
+                invalidInputReceived(minForm, li, textOrInt, "-min");
             }
             if (isNaN(maxValue)){
-                invalidInputReceived(maxForm, textOrInt, "-max");
+                invalidInputReceived(maxForm, li, textOrInt, "-max");
             }
             return false;
         }
@@ -154,55 +134,28 @@ function validateTextOrIntForm (textOrInt) {
 
         if (!(Number.isInteger(min)) || !(Number.isInteger(max)) || min <= 0 || max <= 0) {
             if (!(Number.isInteger(min)) || min <= 0) {
-                invalidInputReceived(minForm, textOrInt, "-min");
+                invalidInputReceived(minForm, li, textOrInt, "-min");
             }
             if (!(Number.isInteger(max)) || max <= 0) {
-                invalidInputReceived(maxForm, textOrInt, "-max");
+                invalidInputReceived(maxForm, li, textOrInt, "-max");
             }
         } else if (textOrInt === "text" && (min > 100 || max > 100)) {
             if (min > 100) {
-                textExceedMaxReceived(minForm, textOrInt, "-min");
+                textExceedMaxReceived(minForm, li, textOrInt, "-min");
             }
             if (max > 100) {
-                textExceedMaxReceived(maxForm, textOrInt, "-max");
+                textExceedMaxReceived(maxForm, li, textOrInt, "-max");
             }
         } else if (max < min) {
             maxForm.className = "invalid";
             maxForm.value = "";
             maxForm.placeholder = "Max must be greater than min";
         } else {
-            document.getElementById(textOrInt).setAttribute("data-" + textOrInt + "-min", min);
-            document.getElementById(textOrInt).setAttribute("data-" + textOrInt + "-max", max);
+            li.setAttribute("data-" + textOrInt + "-min", min);
+            li.setAttribute("data-" + textOrInt + "-max", max);
         }
     }
     return true;
-}
-
-function goBack() {
-    document.getElementById("chooseColumns").style.display = "block";
-    document.getElementById("orderColumns").style.display = "none";
-    document.getElementById("prevBtn").style.display = "none";
-    document.getElementById("nextBtn").style.display = "inline";
-    document.getElementById("confrmBtn").style.display = "none";
-}
-
-function goNext() {
-
-    const checkboxes = document.querySelectorAll('input[type="checkbox"]');
-    const checkedOne = Array.prototype.slice.call(checkboxes).some(x => x.checked);
-    const invalidInputs = document.querySelector(".invalid")
-
-    if (!checkedOne) {
-        alert("Choose at least one column");
-    } else if (invalidInputs) {
-        alert("You have an invalid input");
-    } else {
-        document.getElementById("chooseColumns").style.display = "none";
-        document.getElementById("orderColumns").style.display = "block";
-        document.getElementById("prevBtn").style.display = "inline";
-        document.getElementById("nextBtn").style.display = "none";
-        document.getElementById("confrmBtn").style.display = "inline";
-    }
 }
 
 function validateSchemaName() {
@@ -241,30 +194,34 @@ function createSchema(name) {
 
     const dataSchema = {name: name};
 
-    const orderedList = $("#sortableList").sortable("toArray");
-    const schema = {orderedList: orderedList};
-
-    const textElmnt = document.getElementById("text");
-    const integerElmnt = document.getElementById("integer");
-
-    if (!(textElmnt == null)) {
-        if (textElmnt.hasAttribute("data-text-min")) {
-            schema.textMin = textElmnt.dataset.textMin;
-        }
-        if (textElmnt.hasAttribute("data-text-max")) {
-            schema.textMax = textElmnt.dataset.textMax;
+    const list = document.getElementById("sortableList").children;
+    const orderedList = [];
+    for (let li of list) {
+        const cl = li.className;
+        if (cl == "text") {
+            const obj = {name: cl};
+            if ("textMin" in li.dataset) {
+                obj.textMin = li.dataset.textMin;
+            }
+            if ("textMax" in li.dataset) {
+                obj.textMax = li.dataset.textMax;
+            }
+            orderedList.push(obj);
+        } else if (cl == "integer") {
+            const obj = {name: cl};
+            if ("integerMin" in li.dataset) {
+                obj.integerMin = li.dataset.integerMin;
+            }
+            if ("integerMax" in li.dataset) {
+                obj.integerMax = li.dataset.integerMax;
+            }
+            orderedList.push(obj);
+        } else {
+            orderedList.push(cl);
         }
     }
-    if (!(integerElmnt == null)) {
-        if (integerElmnt.hasAttribute("data-integer-min")) {
-            schema.integerMin = integerElmnt.dataset.integerMin;
-        }
-        if (integerElmnt.hasAttribute("data-integer-max")) {
-            schema.integerMax = integerElmnt.dataset.integerMax;
-        }
-    }
 
-    dataSchema.schema = schema;
+    dataSchema.schema = orderedList;
     return dataSchema
 }
 
@@ -276,7 +233,7 @@ function sendRequest() {
 
         const dataSchema = createSchema(schemaName);
 
-        const url = document.getElementById("confrmBtn").dataset.url;
+        const url = document.getElementById("confirmButton").dataset.url;
 
         fetch(url, {
             method: "POST",
