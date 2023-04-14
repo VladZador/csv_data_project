@@ -11,10 +11,9 @@ from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.generic import ListView, TemplateView
-from django.contrib import messages
 from django.conf import settings
 
-from .models import UserFile, DataSchema
+from .models import UserFile, DataSchema, Column
 from website.decorators import ajax_required
 
 
@@ -55,27 +54,6 @@ class GenerateDataView(LoginRequiredMixin, View):
             })
         except DataSchema.DoesNotExist:
             return JsonResponse(data={"error": "invalid data schema"})
-
-    @staticmethod
-    def _extract_fieldnames(old_fieldnames: list) -> list:
-        """
-        Keeps the order of the list. Makes field names capitalized and more
-        human-readable. "job", "email", "text", "integer", "address", "date"
-        are only capitalized.
-        "full-name" -> "Full name"
-        "domain-name" -> "Domain name"
-        "phone-number" -> "Phone number"
-        "company-name" -> "Company name"
-        :param old_fieldnames:
-        :return:
-        """
-        fieldnames = []
-        for field_name in old_fieldnames:
-            field_name = field_name.capitalize()
-            if "-" in field_name:
-                field_name = " ".join(field_name.split("-"))
-            fieldnames.append(field_name)
-        return fieldnames
 
     @staticmethod
     def _write_csv_row(writer, fieldnames, schema, fake):
@@ -134,36 +112,61 @@ class DataSchemaView(LoginRequiredMixin, TemplateView):
 @method_decorator(ajax_required, name="dispatch")
 class DataSchemaCreateView(LoginRequiredMixin, View):
 
-    @staticmethod
-    def post(request, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
         """
         json.load(request)["post_data"] = {
             "name": "SchemaName",
-            "schema": {
-                "orderedList": ["full-name", "job", "text"],
-                "textMin": 2,
-                "textMax": 5
-            }
+            "schema": [
+                {"index": 1, "name": "full-name"},
+                {"index": 2, "name": "job"},
+                {"index": 3, "name": "text", "min": 2, "max": 5},
+                {"index": 4, "name": "address"},
+                {"index": 5, "name": "text"},
+                {"index": 6, "name": "integer", "min": 10}
+            ]
         }
         :param request:
         :param args:
         :param kwargs:
         :return:
         """
-        data_schema = json.load(request)["post_data"]
-        schema, created = DataSchema.objects.get_or_create(
+        post_data = json.load(request)["post_data"]
+        columns = self._create_columns(post_data["schema"])
+        data_schema = DataSchema.objects.create(
             user=request.user,
-            schema=data_schema["schema"],
-            name=data_schema["name"]
+            name=post_data["name"],
         )
-        if not created:
-            messages.success(request, "You already have this schema")
-            return JsonResponse(
-                data={"redirectUrl": reverse_lazy("create_schema")}
-            )
+        data_schema.columns.set(columns)
         return JsonResponse(
             data={"redirectUrl": reverse_lazy("user_files")}
         )
+
+    def _create_columns(self, schema: list):
+        columns = []
+        for col_prototype in schema:
+            col = Column.objects.create(
+                field=self._edit_field_name(col_prototype["name"]),
+                index=col_prototype["index"],
+                min=col_prototype.get("min"),
+                max=col_prototype.get("max")
+            )
+            columns.append(col)
+        return columns
+
+    @staticmethod
+    def _edit_field_name(field_name: str) -> str:
+        """
+        Makes field names capitalized and more human-readable. "job", "email",
+        "text", "integer", "address", "date" are only capitalized.
+        "full-name" -> "Full name"
+        "domain-name" -> "Domain name"
+        "phone-number" -> "Phone number"
+        "company-name" -> "Company name"
+        """
+        field_name = field_name.capitalize()
+        if "-" in field_name:
+            field_name = " ".join(field_name.split("-"))
+        return field_name
 
 
 @login_required

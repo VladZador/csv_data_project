@@ -20,8 +20,9 @@ function textOrIntegerClick(itemId, text) {
     li.innerHTML = text;
 
     const formId = itemId + "RangeForm";
+    const formArray = document.getElementsByClassName(formId);
 
-    const form = document.getElementsByClassName(formId)[0].cloneNode(true)
+    const form = formArray[formArray.length - 1].cloneNode(true);
     li.appendChild(form);
     document.getElementById("sortableList").appendChild(li);
 }
@@ -66,18 +67,18 @@ function dateClick() {
     dataTypeClick("date", "Date")
 }
 
-function invalidInputReceived(form, li, textOrInt, minOrMax) {
+function invalidInputReceived(form, li, minOrMax) {
     form.className = "invalid";
     form.value = "";
     form.placeholder = "Must be a positive integer";
-    li.removeAttribute("data-" + textOrInt + minOrMax);
+    li.removeAttribute("data-" + minOrMax);
 }
 
-function textExceedMaxReceived(form, li, textOrInt, minOrMax) {
+function textExceedMaxReceived(form, li,  minOrMax) {
     form.className = "invalid";
     form.value = "";
     form.placeholder = "Should not exceed 100";
-    li.removeAttribute("data-" + textOrInt + minOrMax);
+    li.removeAttribute("data-" + minOrMax);
 }
 
 function validateTextOrIntForm(form, textOrInt) {
@@ -91,40 +92,40 @@ function validateTextOrIntForm(form, textOrInt) {
     const maxValue = maxForm.value;
 
     if (minValue == "" && maxValue == "") {
-        li.removeAttribute("data-" + textOrInt + "-min");
-        li.removeAttribute("data-" + textOrInt + "-max");
+        li.removeAttribute("data-min");
+        li.removeAttribute("data-max");
     } else if (minValue == "") {
         if (isNaN(maxValue)){
-            invalidInputReceived(maxForm, li, textOrInt, "-max");
+            invalidInputReceived(maxForm, li, "max");
             return false;
         }
         const max = parseFloat(maxValue);
         if (!(Number.isInteger(max)) || max <= 0) {
-            invalidInputReceived(maxForm, li, textOrInt, "-max");
+            invalidInputReceived(maxForm, li, "max");
         } else {
-            li.removeAttribute("data-" + textOrInt + "-min");
-            li.setAttribute("data-" + textOrInt + "-max", max);
+            li.removeAttribute("data-min");
+            li.setAttribute("data-max", max);
         }
     } else if (maxValue == "") {
         if (isNaN(minValue)){
-            invalidInputReceived(minForm, li, textOrInt, "-min");
+            invalidInputReceived(minForm, li, "min");
             return false;
         }
         const min = parseFloat(minValue);
         if (!(Number.isInteger(min)) || min <= 0) {
-            invalidInputReceived(minForm, li, textOrInt, "-min");
+            invalidInputReceived(minForm, li, "min");
         } else {
-            li.removeAttribute("data-" + textOrInt + "-max");
-            li.setAttribute("data-" + textOrInt + "-min", min);
+            li.removeAttribute("data-max");
+            li.setAttribute("data-min", min);
         }
     } else {
 
         if (isNaN(minValue) || isNaN(maxValue)){
             if (isNaN(minValue)){
-                invalidInputReceived(minForm, li, textOrInt, "-min");
+                invalidInputReceived(minForm, li, "min");
             }
             if (isNaN(maxValue)){
-                invalidInputReceived(maxForm, li, textOrInt, "-max");
+                invalidInputReceived(maxForm, li, "max");
             }
             return false;
         }
@@ -134,25 +135,25 @@ function validateTextOrIntForm(form, textOrInt) {
 
         if (!(Number.isInteger(min)) || !(Number.isInteger(max)) || min <= 0 || max <= 0) {
             if (!(Number.isInteger(min)) || min <= 0) {
-                invalidInputReceived(minForm, li, textOrInt, "-min");
+                invalidInputReceived(minForm, li, "min");
             }
             if (!(Number.isInteger(max)) || max <= 0) {
-                invalidInputReceived(maxForm, li, textOrInt, "-max");
+                invalidInputReceived(maxForm, li, "max");
             }
         } else if (textOrInt === "text" && (min > 100 || max > 100)) {
             if (min > 100) {
-                textExceedMaxReceived(minForm, li, textOrInt, "-min");
+                textExceedMaxReceived(minForm, li, "min");
             }
             if (max > 100) {
-                textExceedMaxReceived(maxForm, li, textOrInt, "-max");
+                textExceedMaxReceived(maxForm, li, "max");
             }
         } else if (max < min) {
             maxForm.className = "invalid";
             maxForm.value = "";
             maxForm.placeholder = "Max must be greater than min";
         } else {
-            li.setAttribute("data-" + textOrInt + "-min", min);
-            li.setAttribute("data-" + textOrInt + "-max", max);
+            li.setAttribute("data-min", min);
+            li.setAttribute("data-max", max);
         }
     }
     return true;
@@ -169,6 +170,33 @@ function validateSchemaName() {
         return false
     } else {
         return schemaName
+    }
+}
+
+function createSchema(name) {
+
+    const list = document.getElementById("sortableList").children;
+    if (list.length != 0) {
+        const orderedList = [];
+        for (let i = 0; i < list.length; i++) {
+            const li = list[i];
+            const className = li.className;
+
+            const obj = {name: className, index: i};
+            if (className == "text" || className == "integer") {
+                if ("min" in li.dataset) {
+                    obj.min = parseFloat(li.dataset.min);
+                }
+                if ("max" in li.dataset) {
+                    obj.max = parseFloat(li.dataset.max);
+                }
+            }
+            orderedList.push(obj);
+        }
+        const dataSchema = {name: name, schema: orderedList};
+        return dataSchema
+    } else {
+        return false
     }
 }
 
@@ -190,65 +218,39 @@ function getCookie(name) {
 
 const csrftoken = getCookie('csrftoken');
 
-function createSchema(name) {
+function sendRequest(dataSchema) {
 
-    const dataSchema = {name: name};
+    const url = document.getElementById("confirmButton").dataset.url;
 
-    const list = document.getElementById("sortableList").children;
-    const orderedList = [];
-    for (let li of list) {
-        const cl = li.className;
-        if (cl == "text") {
-            const obj = {name: cl};
-            if ("textMin" in li.dataset) {
-                obj.textMin = li.dataset.textMin;
-            }
-            if ("textMax" in li.dataset) {
-                obj.textMax = li.dataset.textMax;
-            }
-            orderedList.push(obj);
-        } else if (cl == "integer") {
-            const obj = {name: cl};
-            if ("integerMin" in li.dataset) {
-                obj.integerMin = li.dataset.integerMin;
-            }
-            if ("integerMax" in li.dataset) {
-                obj.integerMax = li.dataset.integerMax;
-            }
-            orderedList.push(obj);
-        } else {
-            orderedList.push(cl);
-        }
-    }
-
-    dataSchema.schema = orderedList;
-    return dataSchema
+    fetch(url, {
+        method: "POST",
+        credentials: "same-origin",
+        headers: {
+            "Accept": "application/json",
+            "X-Requested-With": "XMLHttpRequest",
+            "X-CSRFToken": csrftoken,
+        },
+        body: JSON.stringify({"post_data":dataSchema}),
+        redirect: "follow"
+    })
+        .then(response => response.json())
+        .then(data => {
+            location.assign(data.redirectUrl);
+        })
 }
 
-function sendRequest() {
+function confirmCreation() {
 
     const schemaName = validateSchemaName();
+    if (schemaName === false) {
+        return false
+    } 
 
-    if (!schemaName === false) {
-
-        const dataSchema = createSchema(schemaName);
-
-        const url = document.getElementById("confirmButton").dataset.url;
-
-        fetch(url, {
-            method: "POST",
-            credentials: "same-origin",
-            headers: {
-                "Accept": "application/json",
-                "X-Requested-With": "XMLHttpRequest",
-                "X-CSRFToken": csrftoken,
-            },
-            body: JSON.stringify({"post_data":dataSchema}),
-            redirect: "follow"
-        })
-            .then(response => response.json())
-            .then(data => {
-                location.assign(data.redirectUrl);
-            })
+    const dataSchema = createSchema(schemaName);
+    if (dataSchema === false) {
+        alert("You need to add columns to your data schema");
+        return false
     }
+
+    sendRequest(dataSchema);
 }
