@@ -182,7 +182,7 @@ function createSchema(name) {
             const li = list[i];
             const className = li.className;
 
-            const obj = {name: className, index: i};
+            const obj = {name: className, index: i+1};
             if (className == "text" || className == "integer") {
                 if ("min" in li.dataset) {
                     obj.min = parseFloat(li.dataset.min);

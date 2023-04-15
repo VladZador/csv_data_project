@@ -63,11 +63,11 @@ function getCookie(name) {
 
 const csrftoken = getCookie('csrftoken');
 
-function sendRequest(name, number, filename) {
+function sendRequest(schemaName, number, filename) {
 
     const url = document.getElementById("generateBtn").dataset.url;
 
-    const post_data = {name: name, number: number, filename: filename};
+    const post_data = {schemaName: schemaName, number: number, filename: filename};
 
     fetch(url, {
         method: "POST",

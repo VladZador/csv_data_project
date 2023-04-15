@@ -39,11 +39,12 @@ class GenerateDataView(LoginRequiredMixin, View):
     def post(self, request, *args, **kwargs):
         data = json.load(request)["post_data"]
         try:
-            schema_record = DataSchema.objects.get(name=data["name"])
+            # todo: add prefetch_related() to the query
+            schema_record = DataSchema.objects.get(name=data["schemaName"])
             self._create_csv_file(
                 filename=settings.MEDIA_ROOT / data["filename"],
-                schema=schema_record.schema,
-                number=data["number"]
+                columns_queryset=schema_record.columns.all(),
+                number_of_records=data["number"]
             )
             UserFile.objects.create(
                 user=request.user,
@@ -55,54 +56,77 @@ class GenerateDataView(LoginRequiredMixin, View):
         except DataSchema.DoesNotExist:
             return JsonResponse(data={"error": "invalid data schema"})
 
-    @staticmethod
-    def _write_csv_row(writer, fieldnames, schema, fake):
-        row = {}
-        for field_name in fieldnames:
-            if field_name == "Full name":
-                row[field_name] = fake.name()
-            elif field_name == "Job":
-                row[field_name] = fake.job()
-            elif field_name == "Email":
-                row[field_name] = fake.company_email()
-            elif field_name == "Domain name":
-                row[field_name] = fake.domain_name()
-            elif field_name == "Phone number":
-                row[field_name] = fake.phone_number()
-            elif field_name == "Company name":
-                row[field_name] = fake.company()
-            elif field_name == "Text":
-                num_sentences = randint(
-                    a=int(schema.get("textMin") or 1),
-                    b=int(schema.get("textMax") or 100)
-                )
-                row[field_name] = fake.paragraph(nb_sentences=num_sentences)
-            elif field_name == "Integer":
-                row[field_name] = randint(
-                    a=int(schema.get("integerMin") or 1),
-                    b=int(schema.get("integerMax") or 999999999)
-                )
-            elif field_name == "Address":
-                row[field_name] = fake.address()
-            elif field_name == "Date":
-                row[field_name] = fake.date()
-        writer.writerow(row)
-        return writer
-
-    def _create_csv_file(self, filename, schema, number):
-        fieldnames = self._extract_fieldnames(schema["orderedList"])
+    def _create_csv_file(self, filename, columns_queryset, number_of_records):
+        sorted_columns = self._sort_columns(columns_queryset)
+        field_names = self._extract_fieldnames(sorted_columns)
 
         Faker.seed(randint(1, 999999999))
         fake = Faker()
 
         with open(filename, mode="w") as csv_file:
-            writer = csv.DictWriter(
-                csv_file, fieldnames, quoting=csv.QUOTE_NONNUMERIC
+            writer = csv.writer(
+                csv_file, quoting=csv.QUOTE_NONNUMERIC
             )
-            writer.writeheader()
+            writer.writerow(field_names)
 
-            for i in range(number):
-                self._write_csv_row(writer, fieldnames, schema, fake)
+            for i in range(number_of_records):
+                self._write_csv_row(writer, sorted_columns, fake)
+
+    @staticmethod
+    def _sort_columns(columns_queryset) -> list:
+
+        def index_sort(elem):
+            return elem["index"]
+
+        indexed_columns = []
+        for col in columns_queryset:
+            indexed_columns.append({
+                "index": col.index,
+                "field_name": col.field,
+                "min": col.min,
+                "max": col.max
+            })
+        indexed_columns.sort(key=index_sort)
+        return indexed_columns
+
+    @staticmethod
+    def _extract_fieldnames(sorted_columns: list) -> list:
+        return [col["field_name"] for col in sorted_columns]
+
+    @staticmethod
+    def _write_csv_row(writer, sorted_columns, fake):
+        row = []
+        for column in sorted_columns:
+            field_name = column["field_name"]
+            if field_name == "Full name":
+                row.append(fake.name())
+            elif field_name == "Job":
+                row.append(fake.job())
+            elif field_name == "Email":
+                row.append(fake.company_email())
+            elif field_name == "Domain name":
+                row.append(fake.domain_name())
+            elif field_name == "Phone number":
+                row.append(fake.phone_number())
+            elif field_name == "Company name":
+                row.append(fake.company())
+            elif field_name == "Text":
+                number_of_sentences = randint(
+                    a=int(column.get("min") or 1),
+                    b=int(column.get("max") or 100)
+                )
+                row.append(fake.paragraph(nb_sentences=number_of_sentences))
+            elif field_name == "Integer":
+                row.append(randint(
+                    a=int(column.get("min") or 1),
+                    b=int(column.get("max") or 999999999)
+                ))
+            elif field_name == "Address":
+                row.append(fake.address())
+            elif field_name == "Date":
+                row.append(fake.date())
+        writer.writerow(row)
+        return writer
 
 
 class DataSchemaView(LoginRequiredMixin, TemplateView):
