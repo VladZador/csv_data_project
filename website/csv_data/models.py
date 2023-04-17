@@ -24,7 +24,7 @@ class Column(models.Model):
             string += f" | min={self.min}"
         if self.max:
             string += f" | max={self.max}"
-        return string
+        return "[" + string + "]"
 
 
 class DataSchema(models.Model):
