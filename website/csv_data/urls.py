@@ -9,11 +9,11 @@ urlpatterns = [
     path('csv-files/generate-data/',
          GenerateDataView.as_view(),
          name="generate_data"),
+    path("csv-files/<str:filename>/", download_file, name="download_file"),
     path('create-schema/',
          DataSchemaView.as_view(),
          name="create_schema"),
     path("create-schema/confirm/",
          DataSchemaCreateView.as_view(),
          name="confirm_schema_creation"),
-    path("media/<str:filename>/", download_file, name="download_file"),
 ]

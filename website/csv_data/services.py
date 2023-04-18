@@ -2,10 +2,11 @@ import csv
 import json
 from random import randint
 
+from django.core.files.base import ContentFile
+from django.urls import reverse_lazy
 from faker import Faker
 
 from django.http import JsonResponse
-from django.conf import settings
 
 from .models import DataSchema, Column, UserFile
 
@@ -35,6 +36,9 @@ class DataSchemaCreateService:
             name=self.post_data["name"],
         )
         data_schema.columns.set(columns)
+        return JsonResponse(
+            data={"redirectUrl": reverse_lazy("user_files")}
+        )
 
     def _create_columns(self, schema: list) -> list:
         columns = []
@@ -83,13 +87,10 @@ class GenerateDataService:
                 name=self.data["schemaName"]
             )
             self._create_csv_file(
-                filename=settings.MEDIA_ROOT / self.data["filename"],
                 columns_queryset=schema_record.columns.all(),
-                number_of_records=self.data["number"]
-            )
-            UserFile.objects.create(
+                number_of_records=self.data["number"],
+                filename=self.data["filename"],
                 user=self.user,
-                filename=self.data["filename"]
             )
             return JsonResponse(data={
                 "filename": self.data["filename"]
@@ -97,21 +98,33 @@ class GenerateDataService:
         except DataSchema.DoesNotExist:
             return JsonResponse(data={"error": "invalid data schema"})
 
-    def _create_csv_file(self, filename, columns_queryset, number_of_records):
+    def _create_csv_file(self,
+                         columns_queryset,
+                         number_of_records,
+                         filename,
+                         user):
         sorted_columns = self._sort_columns(columns_queryset)
         field_names = self._extract_fieldnames(sorted_columns)
 
-        Faker.seed(randint(1, 999999999))
-        fake = Faker()
+        file = ContentFile("")
+        file.name = filename
 
-        with open(filename, mode="w") as csv_file:
+        with file.open(mode="w") as csv_file:
             writer = csv.writer(
                 csv_file, quoting=csv.QUOTE_NONNUMERIC
             )
             writer.writerow(field_names)
 
+            Faker.seed(randint(1, 999999999))
+            fake = Faker()
+
             for i in range(number_of_records):
                 self._write_csv_row(writer, sorted_columns, fake)
+
+            UserFile.objects.create(
+                user=user,
+                csv_file=csv_file
+            )
 
     @staticmethod
     def _sort_columns(columns_queryset) -> list:

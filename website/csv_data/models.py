@@ -6,10 +6,10 @@ from .choices import ColumnNames
 
 class UserFile(models.Model):
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
-    filename = models.CharField(max_length=255)
+    csv_file = models.FileField()
 
     def __str__(self):
-        return f"{self.user} | {self.filename}"
+        return f"{self.user} | {self.csv_file}"
 
 
 class Column(models.Model):

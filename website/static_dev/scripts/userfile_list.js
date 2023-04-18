@@ -26,6 +26,8 @@ function validateNumber() {
 }
 
 function createFilename(schemaName, number) {
+    const strName = schemaName.split(" ").join("_")
+
     const d = new Date;
 
     function padLeft(num) {
@@ -41,8 +43,8 @@ function createFilename(schemaName, number) {
                padLeft(d.getDate())].join('-') + '_' +
               [padLeft(d.getHours()),
                padLeft(d.getMinutes()),
-               padLeft(d.getSeconds())].join(':');
-    return schemaName + "-" + number + "_" + timestamp + ".csv"
+               padLeft(d.getSeconds())].join('-');
+    return strName + "-" + number + "_" + timestamp + ".csv"
 }
 
 function getCookie(name) {
@@ -65,7 +67,7 @@ const csrftoken = getCookie('csrftoken');
 
 function sendRequest(schemaName, number, filename) {
 
-    const url = document.getElementById("generateBtn").dataset.url;
+    const url = document.getElementById("generateButton").dataset.url;
 
     const post_data = {schemaName: schemaName, number: number, filename: filename};
 
@@ -120,7 +122,7 @@ function changeUserFileElement(filename) {
     
     const href = document.createElement("a");
     href.setAttribute("class", "btn btn-primary");
-    href.setAttribute("href", "/media/" + filename);
+    href.setAttribute("href", "/csv-files/" + filename);
     href.setAttribute("role", "button");
     href.innerHTML = "Download";
     

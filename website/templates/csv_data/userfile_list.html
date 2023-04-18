@@ -27,7 +27,7 @@
                 <div class="col-container d-flex align-items-center justify-content-evenly">
                     <input type="text" id="recordsNumber" name="recordsNumber"
                     onclick="this.className = ''">
-                    <button type="button" id="generateBtn" data-url="{% url 'generate_data' %}" 
+                    <button type="button" id="generateButton" data-url="{% url 'generate_data' %}" 
                     onclick="generateData()" class="btn btn-primary">Generate data</button>
                 </div>
                 {% else %}
@@ -51,11 +51,11 @@
                 </thead>
                 <tbody id="tableBody">
                     {% for file in object_list reversed %}
-                    <tr id="{{ file.filename }}">
-                        <td>{{ file.filename }}</td>
+                    <tr id="{{ file.csv_file }}">
+                        <td>{{ file.csv_file }}</td>
                         <td class="statusReady">Ready</td>
                         <td class="link">
-                            <a class="btn btn-primary" href="/media/{{ file.filename }}" 
+                            <a class="btn btn-primary" href="{{ file.csv_file }}"
                             role="button">Download</a></td>
                     </tr>
                     {% endfor %}

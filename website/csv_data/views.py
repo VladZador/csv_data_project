@@ -2,10 +2,8 @@ from django.views import View
 from django.views.generic import ListView, TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse, HttpResponse
-from django.urls import reverse_lazy
+from django.http import HttpResponse, Http404
 from django.utils.decorators import method_decorator
-from django.conf import settings
 
 from .models import UserFile, DataSchema
 from website.decorators import ajax_required
@@ -27,10 +25,7 @@ class DataSchemaCreateView(LoginRequiredMixin, View):
     @staticmethod
     def post(request, *args, **kwargs):
         data_schema = DataSchemaCreateService(request)
-        data_schema.create_data_schema()
-        return JsonResponse(
-            data={"redirectUrl": reverse_lazy("user_files")}
-        )
+        return data_schema.create_data_schema()
 
 
 class UserFileView(LoginRequiredMixin, ListView):
@@ -58,9 +53,15 @@ class GenerateDataView(LoginRequiredMixin, View):
 @login_required
 def download_file(request, *args, **kwargs):
     filename = kwargs["filename"]
-    file_path = settings.MEDIA_ROOT / filename
+    try:
+        csv_file_instance = UserFile.objects.get(
+            user=request.user,
+            csv_file=filename
+        )
 
-    with open(file_path, 'r') as file:
-        response = HttpResponse(file, content_type="text/csv")
-        response['Content-Disposition'] = f"attachment; filename={filename}"
-    return response
+        with csv_file_instance.csv_file.open(mode="r") as csv_file:
+            response = HttpResponse(csv_file, content_type="text/csv")
+            response['Content-Disposition'] = f"attachment; filename={filename}"
+        return response
+    except UserFile.DoesNotExist:
+        raise Http404(f'File "{filename}" does not exist')
